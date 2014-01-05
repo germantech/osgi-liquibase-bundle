@@ -63,7 +63,7 @@ public class OSGiXMLChangeLogSAXParser extends XMLChangeLogSAXParser {
 
     @Override
     public int getPriority() {
-        return PRIORITY_DEFAULT;
+        return PRIORITY_DEFAULT + 1;
     }
 
     public static String getSchemaVersion() {

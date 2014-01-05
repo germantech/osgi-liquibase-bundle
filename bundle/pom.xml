@@ -76,16 +76,33 @@
           <instructions>
             <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
             <Export-Package>${project.artifactId},liquibase.*;version=${liquibase.version}</Export-Package>
-            <_exportcontents>
-              liquibase.*;-noimport:=true,
-            </_exportcontents>
             <Import-Package>
               *;resolution:=optional
             </Import-Package>
             <Embed-Dependency>
-              groupId=org.liquibase;artifactId=liquibase-core
+              groupId=org.liquibase;artifactId=liquibase-core;inline=true
             </Embed-Dependency>
-            <Liquibase-Package>${project.artifactId}.internal.parser</Liquibase-Package>
+            <Include-Resource>
+              {maven-resources},
+              liquibase/servicelocator/ServiceLocator.class=target/classes/liquibase/servicelocator/ServiceLocator.class
+            </Include-Resource>
+            <Liquibase-Package>
+              liquibase.change,liquibase.database,
+              liquibase.parser,
+              liquibase.precondition,
+              liquibase.datatype,
+              liquibase.serializer,
+              liquibase.sqlgenerator,
+              liquibase.executor,
+              liquibase.snapshot,
+              liquibase.logging,
+              liquibase.diff,
+              liquibase.structure,
+              liquibase.structurecompare,
+              liquibase.lockservice,
+              liquibase.ext,
+              ${project.artifactId}.internal.parser
+            </Liquibase-Package>
           </instructions>
         </configuration>
       </plugin>

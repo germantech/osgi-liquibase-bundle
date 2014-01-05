@@ -611,7 +611,6 @@ class OSGiXMLChangeLogSAXHandler extends DefaultHandler {
          changeLog= changeLogParserFactory.getParser(fileName, resourceAccessorToUse).parse(
                  fileName, changeLogParameters, resourceAccessorToUse);
       } catch (UnknownChangelogFormatException e) {
-          System.out.println("BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB");
         log.warning("included file " + fileName + " is not a recognized file type");
                     return false;
       }

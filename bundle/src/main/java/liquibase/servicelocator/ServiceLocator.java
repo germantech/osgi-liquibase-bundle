@@ -163,6 +163,7 @@ public class ServiceLocator {
     }
 
     public void addPackageToScan(String packageName) {
+        logger.debug("Adding package to scan: " + packageName);
         packagesToScan.add(packageName);
     }
 
