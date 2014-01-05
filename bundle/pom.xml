@@ -34,7 +34,7 @@
 
   <groupId>org.everit.osgi</groupId>
   <artifactId>org.everit.osgi.liquibase.bundle</artifactId>
-  <version>1.0.0-alpha1</version>
+  <version>1.0.0-SNAPSHOT</version>
 
   <packaging>bundle</packaging>
   <name>Everit OSGi Liquibase Bundle</name>
