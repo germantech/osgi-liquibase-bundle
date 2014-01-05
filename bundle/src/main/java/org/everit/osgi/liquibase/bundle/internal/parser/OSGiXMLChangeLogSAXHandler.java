@@ -585,7 +585,7 @@ class OSGiXMLChangeLogSAXHandler extends DefaultHandler {
             }
             OSGiResourceAccessor osgiResourceAccessor = (OSGiResourceAccessor) resourceAccessor;
             fileName = fileName.substring(LiquibaseOSGiUtil.INCLUDE_FILE_OSGI_PREFIX.length());
-            BundleWire bundleWire = LiquibaseOSGiUtil.findMatchingWireForSchemaExpression(
+            BundleWire bundleWire = LiquibaseOSGiUtil.findMatchingWireBySchemaExpression(
                     osgiResourceAccessor.getBundle(), fileName);
 
             if (bundleWire == null) {
@@ -611,7 +611,8 @@ class OSGiXMLChangeLogSAXHandler extends DefaultHandler {
          changeLog= changeLogParserFactory.getParser(fileName, resourceAccessorToUse).parse(
                  fileName, changeLogParameters, resourceAccessorToUse);
       } catch (UnknownChangelogFormatException e) {
-        log.warning("included file "+relativeBaseFileName + "/" + fileName + " is not a recognized file type");
+          System.out.println("BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB");
+        log.warning("included file " + fileName + " is not a recognized file type");
                     return false;
       }
       PreconditionContainer preconditions = changeLog.getPreconditions();

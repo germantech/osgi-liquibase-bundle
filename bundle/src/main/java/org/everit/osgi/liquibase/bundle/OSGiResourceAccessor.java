@@ -65,6 +65,7 @@ public class OSGiResourceAccessor extends CompositeResourceAccessor {
     public OSGiResourceAccessor(Bundle bundle) {
         super(new BundleResourceAccessor(bundle), new ClassLoaderResourceAccessor(
                 OSGiResourceAccessor.class.getClassLoader()));
+        this.bundle = bundle;
     }
 
     public Bundle getBundle() {

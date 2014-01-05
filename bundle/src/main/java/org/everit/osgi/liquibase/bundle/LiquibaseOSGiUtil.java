@@ -21,15 +21,21 @@ package org.everit.osgi.liquibase.bundle;
  * MA 02110-1301  USA
  */
 
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.SortedSet;
+import java.util.TreeMap;
+import java.util.TreeSet;
 
 import org.apache.felix.utils.manifest.Attribute;
 import org.apache.felix.utils.manifest.Clause;
 import org.apache.felix.utils.manifest.Directive;
 import org.apache.felix.utils.manifest.Parser;
 import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.Filter;
 import org.osgi.framework.FrameworkUtil;
@@ -45,10 +51,10 @@ public final class LiquibaseOSGiUtil {
     public static final String ATTR_SCHEMA_NAME = "name";
 
     public static final String ATTR_SCHEMA_RESOURCE = "resource";
-    
+
     public static final String INCLUDE_FILE_OSGI_PREFIX = "eosgi:";
 
-    public static final BundleWire findMatchingWireForSchemaExpression(final Bundle currentBundle,
+    public static final BundleWire findMatchingWireBySchemaExpression(final Bundle currentBundle,
             final String schemaExpression) {
 
         BundleWiring bundleWiring = currentBundle.adapt(BundleWiring.class);
@@ -84,6 +90,50 @@ public final class LiquibaseOSGiUtil {
         return matchingWire;
     }
 
+    public static Map<Bundle, List<BundleCapability>> findBundlesBySchemaExpression(final String schemaExpression,
+            BundleContext bundleContext) {
+        Filter filter = createFilterForLiquibaseCapabilityAttributes(schemaExpression);
+        Map<Bundle, List<BundleCapability>> result = new TreeMap<>(new Comparator<Bundle>() {
+
+            @Override
+            public int compare(Bundle o1, Bundle o2) {
+                long bundle1Id = o1.getBundleId();
+                long bundle2Id = o2.getBundleId();
+                if (bundle1Id == bundle2Id) {
+                    return 0;
+                } else if (bundle1Id < bundle2Id) {
+                    return -1;
+                } else {
+                    return 1;
+                }
+            }
+        });
+        Bundle[] bundles = bundleContext.getBundles();
+        for (Bundle bundle : bundles) {
+            int state = bundle.getState();
+            if (state == Bundle.ACTIVE) {
+                BundleWiring bundleWiring = bundle.adapt(BundleWiring.class);
+                List<BundleCapability> capabilities = bundleWiring.getCapabilities(LIQUIBASE_CAPABILITY_NS);
+                for (BundleCapability capability : capabilities) {
+                    Map<String, Object> attributes = capability.getAttributes();
+                    if (attributes.get(LiquibaseOSGiUtil.ATTR_SCHEMA_RESOURCE) != null) {
+                        if (filter.matches(attributes)) {
+                            List<BundleCapability> capabilityList = result.get(bundle);
+                            if (capabilityList == null) {
+                                capabilityList = new ArrayList<>();
+                                result.put(bundle, capabilityList);
+                            }
+                            capabilityList.add(capability);
+                        }
+                    } else {
+                        // TODO log 
+                    }
+                }
+            }
+        }
+        return result;
+    }
+
     public static Filter createFilterForLiquibaseCapabilityAttributes(final String schemaExpression) {
         Clause[] clauses = Parser.parseClauses(new String[] { schemaExpression });
         if (clauses.length != 1) {
@@ -106,7 +156,7 @@ public final class LiquibaseOSGiUtil {
             }
             String additionalFilterString = directives[0].getValue();
             filterString = "(&" + filterString + additionalFilterString + ")";
-            
+
         }
         try {
             return FrameworkUtil.createFilter(filterString);
