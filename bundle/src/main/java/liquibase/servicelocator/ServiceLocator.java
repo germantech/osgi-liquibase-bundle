@@ -36,6 +36,7 @@ import java.util.jar.Manifest;
 
 import org.everit.osgi.liquibase.bundle.OSGiResourceAccessor;
 import org.everit.osgi.liquibase.bundle.internal.BundlePackageScanClassResolver;
+import org.everit.osgi.liquibase.bundle.internal.SimpleClassLoaderResourceAccessor;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.FrameworkUtil;
 
@@ -270,7 +271,7 @@ public class ServiceLocator {
             ResourceAccessor resourceAccessor = new OSGiResourceAccessor(bundle);
             instance = new ServiceLocator(classResolver, resourceAccessor);
         } else {
-            instance = new ServiceLocator();
+            instance = new ServiceLocator(new SimpleClassLoaderResourceAccessor(ServiceLocator.class.getClassLoader()));
         }
     }
 
