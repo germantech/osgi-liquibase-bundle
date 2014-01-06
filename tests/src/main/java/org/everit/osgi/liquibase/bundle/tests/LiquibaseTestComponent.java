@@ -66,10 +66,23 @@ import org.osgi.framework.wiring.BundleCapability;
         @Property(name = "eosgi.testId", value = "liquibaseTest") })
 public class LiquibaseTestComponent {
 
-    @Reference
-    private DataSource dataSource;
+    private static void copyURLContentToStream(URL url, OutputStream out) {
+        try (InputStream is = url.openStream()) {
+            byte[] buffer = new byte[1024];
+            int len = is.read(buffer);
+            while (len > -1) {
+                out.write(buffer, 0, len);
+                len = is.read(buffer);
+            }
+        } catch (IOException e) {
+            throw new RuntimeException("Error during readin stream " + url.toExternalForm(), e);
+        }
+    }
 
     private BundleContext bundleContext;
+
+    @Reference
+    private DataSource dataSource;
 
     @Activate
     public void activate(final BundleContext bundleContext) {
@@ -102,13 +115,60 @@ public class LiquibaseTestComponent {
         }
     }
 
+    private void installAndStartBundle(String pathPrefix, String... filePaths) {
+        ByteArrayOutputStream bout = new ByteArrayOutputStream();
+        ZipOutputStream zipOutputStream = new ZipOutputStream(bout);
+        Bundle bundle = bundleContext.getBundle();
+        for (String filePath : filePaths) {
+            ZipEntry zipEntry = new ZipEntry(filePath);
+            String resourcePath = "/META-INF/testBundles/" + pathPrefix + "/" + filePath;
+            try {
+                zipOutputStream.putNextEntry(zipEntry);
+                URL resource = bundle.getResource(resourcePath);
+                copyURLContentToStream(resource, zipOutputStream);
+                zipOutputStream.closeEntry();
+            } catch (IOException e) {
+                throw new RuntimeException("Error during reading resource " + resourcePath, e);
+            }
+
+        }
+        try {
+            zipOutputStream.close();
+            byte[] bundleBA = bout.toByteArray();
+            Bundle installedBundle = bundleContext.installBundle(pathPrefix, new ByteArrayInputStream(bundleBA));
+            installedBundle.start();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        } catch (BundleException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void installAndStartBundles() {
+        installAndStartBundle("bundle2", "META-INF/MANIFEST.MF", "META-INF/liquibase/car.xml",
+                "META-INF/liquibase/person.xml");
+        installAndStartBundle("bundle1", "META-INF/MANIFEST.MF", "META-INF/liquibase/myApp.xml");
+    }
+
+    private void removeBundles() {
+
+        try {
+            Bundle bundle1 = bundleContext.getBundle("bundle1");
+            bundle1.uninstall();
+            Bundle bundle2 = bundleContext.getBundle("bundle2");
+            bundle2.uninstall();
+        } catch (BundleException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     @Test
     @TestDuringDevelopment
     public void testChangeLogWithNormalAndOSGiInclude() {
         installAndStartBundles();
         try {
             Map<Bundle, List<BundleCapability>> bundles =
-                    LiquibaseOSGiUtil.findBundlesBySchemaExpression("myApp", bundleContext);
+                    LiquibaseOSGiUtil.findBundlesBySchemaExpression("myApp", bundleContext, Bundle.ACTIVE);
 
             Assert.assertEquals(1, bundles.size());
             Entry<Bundle, List<BundleCapability>> bundleWithCapability = bundles.entrySet().iterator().next();
@@ -145,65 +205,5 @@ public class LiquibaseTestComponent {
             removeBundles();
         }
 
-    }
-
-    private void installAndStartBundles() {
-        installAndStartBundle("bundle2", "META-INF/MANIFEST.MF", "META-INF/liquibase/car.xml",
-                "META-INF/liquibase/person.xml");
-        installAndStartBundle("bundle1", "META-INF/MANIFEST.MF", "META-INF/liquibase/myApp.xml");
-    }
-
-    private void removeBundles() {
-
-        try {
-            Bundle bundle1 = bundleContext.getBundle("bundle1");
-            bundle1.uninstall();
-            Bundle bundle2 = bundleContext.getBundle("bundle2");
-            bundle2.uninstall();
-        } catch (BundleException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private void installAndStartBundle(String pathPrefix, String... filePaths) {
-        ByteArrayOutputStream bout = new ByteArrayOutputStream();
-        ZipOutputStream zipOutputStream = new ZipOutputStream(bout);
-        Bundle bundle = bundleContext.getBundle();
-        for (String filePath : filePaths) {
-            ZipEntry zipEntry = new ZipEntry(filePath);
-            String resourcePath = "/META-INF/testBundles/" + pathPrefix + "/" + filePath;
-            try {
-                zipOutputStream.putNextEntry(zipEntry);
-                URL resource = bundle.getResource(resourcePath);
-                copyURLContentToStream(resource, zipOutputStream);
-                zipOutputStream.closeEntry();
-            } catch (IOException e) {
-                throw new RuntimeException("Error during reading resource " + resourcePath, e);
-            }
-
-        }
-        try {
-            zipOutputStream.close();
-            byte[] bundleBA = bout.toByteArray();
-            Bundle installedBundle = bundleContext.installBundle(pathPrefix, new ByteArrayInputStream(bundleBA));
-            installedBundle.start();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        } catch (BundleException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private static void copyURLContentToStream(URL url, OutputStream out) {
-        try (InputStream is = url.openStream()) {
-            byte[] buffer = new byte[1024];
-            int len = is.read(buffer);
-            while (len > -1) {
-                out.write(buffer, 0, len);
-                len = is.read(buffer);
-            }
-        } catch (IOException e) {
-            throw new RuntimeException("Error during readin stream " + url.toExternalForm(), e);
-        }
     }
 }

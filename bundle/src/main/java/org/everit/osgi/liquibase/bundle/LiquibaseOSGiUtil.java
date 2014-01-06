@@ -89,7 +89,7 @@ public final class LiquibaseOSGiUtil {
     }
 
     public static Map<Bundle, List<BundleCapability>> findBundlesBySchemaExpression(final String schemaExpression,
-            BundleContext bundleContext) {
+            BundleContext bundleContext, int requiredBundleState) {
         Filter filter = createFilterForLiquibaseCapabilityAttributes(schemaExpression);
         Map<Bundle, List<BundleCapability>> result = new TreeMap<>(new Comparator<Bundle>() {
 
@@ -109,7 +109,7 @@ public final class LiquibaseOSGiUtil {
         Bundle[] bundles = bundleContext.getBundles();
         for (Bundle bundle : bundles) {
             int state = bundle.getState();
-            if (state == Bundle.ACTIVE) {
+            if ((state & requiredBundleState) != 0) {
                 BundleWiring bundleWiring = bundle.adapt(BundleWiring.class);
                 List<BundleCapability> capabilities = bundleWiring.getCapabilities(LIQUIBASE_CAPABILITY_NS);
                 for (BundleCapability capability : capabilities) {
@@ -124,7 +124,7 @@ public final class LiquibaseOSGiUtil {
                             capabilityList.add(capability);
                         }
                     } else {
-                        // TODO log 
+                        // TODO log
                     }
                 }
             }
