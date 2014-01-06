@@ -265,9 +265,13 @@ public class ServiceLocator {
 
     public static void reset() {
         Bundle bundle = FrameworkUtil.getBundle(ServiceLocator.class);
-        BundlePackageScanClassResolver classResolver = new BundlePackageScanClassResolver(bundle);
-        ResourceAccessor resourceAccessor = new OSGiResourceAccessor(bundle);
-        instance = new ServiceLocator(classResolver, resourceAccessor);
+        if (bundle != null) {
+            BundlePackageScanClassResolver classResolver = new BundlePackageScanClassResolver(bundle);
+            ResourceAccessor resourceAccessor = new OSGiResourceAccessor(bundle);
+            instance = new ServiceLocator(classResolver, resourceAccessor);
+        } else {
+            instance = new ServiceLocator();
+        }
     }
 
     protected Logger getLogger() {

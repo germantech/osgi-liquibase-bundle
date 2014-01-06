@@ -168,7 +168,7 @@ public class LiquibaseTestComponent {
         installAndStartBundles();
         try {
             Map<Bundle, List<BundleCapability>> bundles =
-                    LiquibaseOSGiUtil.findBundlesBySchemaExpression("myApp", bundleContext, Bundle.ACTIVE);
+                    LiquibaseOSGiUtil.findBundlesBySchemaExpression("myApp", bundleContext);
 
             Assert.assertEquals(1, bundles.size());
             Entry<Bundle, List<BundleCapability>> bundleWithCapability = bundles.entrySet().iterator().next();
