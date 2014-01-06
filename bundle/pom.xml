@@ -41,7 +41,7 @@
   <description>Everit Liquibase Bundle.</description>
 
   <properties>
-    <projectpath>osgi-liquibase-ext</projectpath>
+    <projectpath>osgi-liquibase-bundle</projectpath>
     <liquibase.version>3.0.8</liquibase.version>
   </properties>
 

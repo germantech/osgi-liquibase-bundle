@@ -5,7 +5,7 @@ Liquibase bundle that contains extensions from Everit to be able to use
 Liquibase in an OSGi environmnent. When this bundle is used, no other jar
 of Liquibase should be dropped into the OSGi container.
 
-# Inclusion of changeLog from other bundles
+## Inclusion of changeLog from other bundles
 
 One enhancement of this bundle is that in the XML changeLog format it is
 possible to address changeLogs from other bundles.
