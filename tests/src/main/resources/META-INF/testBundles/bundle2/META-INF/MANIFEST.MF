@@ -2,4 +2,8 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-SymbolicName: org.everit.osgi.liquibase.bundle.tests.bundle2
 Bundle-Version: 1.0.0
-Provide-Capability: liquibase.schema;name=carandperson;resource=/META-INF/liquibase/car.xml
+Provide-Capability: liquibase.schema;name=noresource,
+ liquibase.schema;name=carandperson;resource=/META-INF/liquibase/car.xml,
+ liquibase.schema;name=carandperson;resource=/META-INF/liquibase/car.xml,
+ liquibase.schema;name=test;resource=/META-INF/liquibase/test.xml
+ 
