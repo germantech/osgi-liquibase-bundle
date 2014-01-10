@@ -46,7 +46,7 @@ public class ConfigurationInitComponent {
     public void activate(final BundleContext bundleContext) {
         try {
             Dictionary<String, Object> xaDataSourceProps = new Hashtable<String, Object>();
-            xaDataSourceProps.put(DataSourceFactory.JDBC_URL, "jdbc:h2:mem:");
+            xaDataSourceProps.put(DataSourceFactory.JDBC_URL, "jdbc:h2:mem:test");
             String xaDataSourcePid = getOrCreateConfiguration("org.everit.osgi.jdbc.dsf.XADataSourceComponent",
                     xaDataSourceProps);
 

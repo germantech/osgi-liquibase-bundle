@@ -102,9 +102,8 @@ public class LiquibaseTestComponent {
         try {
             Connection connection = dataSource.getConnection();
             database = DatabaseFactory.getInstance().findCorrectDatabaseImplementation(new JdbcConnection(connection));
-            // database.setDefaultCatalogName("public");
-            // database.setDefaultSchemaName("public");
-            Liquibase liquibase = new Liquibase(null, null, database);
+//             database.setDefaultSchemaName("PUBLIC");
+            Liquibase liquibase = new Liquibase((String) null, (ResourceAccessor) null, database);
             liquibase.dropAll();
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -192,7 +191,7 @@ public class LiquibaseTestComponent {
                 database =
                         DatabaseFactory.getInstance().findCorrectDatabaseImplementation(new JdbcConnection(connection));
                 Liquibase liquibase = new Liquibase(resourceName, resourceAccessor, database);
-                liquibase.update(null);
+                liquibase.update((String) null);
                 Statement statement = connection.createStatement();
                 Assert.assertTrue(statement.execute("select * from \"person\""));
 
@@ -217,7 +216,6 @@ public class LiquibaseTestComponent {
      * Testing the {@link}createFilterForLiquibaseCapabilityAttributes function with invalid schema expressions.
      */
     @Test
-    @TestDuringDevelopment
     public void testcreateFilterForLiquibaseCapabilityAttributes() {
         try {
             LiquibaseOSGiUtil.createFilterForLiquibaseCapabilityAttributes("myApp;myApp2");
@@ -258,7 +256,6 @@ public class LiquibaseTestComponent {
      * include in a ChangeLog file.
      */
     @Test
-    @TestDuringDevelopment
     public void testDoubledCapability() {
 
         installAndStartBundle("bundle2", "META-INF/MANIFEST.MF", "META-INF/liquibase/car.xml");
@@ -284,7 +281,6 @@ public class LiquibaseTestComponent {
      * provide that capability. In this case, the normal behavior is to throw a NoSuchElementException.
      */
     @Test
-    @TestDuringDevelopment
     public void testHalfwired() {
         installAndStartBundle("bundle2", "META-INF/MANIFEST.MF", "META-INF/liquibase/car.xml",
                 "META-INF/liquibase/person.xml");
@@ -308,7 +304,6 @@ public class LiquibaseTestComponent {
      * behavior is to throw a ChangeLogParseException.
      */
     @Test
-    @TestDuringDevelopment
     public void testNoResource() {
         installAndStartBundle("bundle2", "META-INF/MANIFEST.MF", "META-INF/liquibase/car.xml",
                 "META-INF/liquibase/person.xml");
@@ -331,7 +326,7 @@ public class LiquibaseTestComponent {
                 database =
                         DatabaseFactory.getInstance().findCorrectDatabaseImplementation(new JdbcConnection(connection));
                 Liquibase liquibase = new Liquibase(resourceName, resourceAccessor, database);
-                liquibase.update(null);
+                liquibase.update((String) null);
 
                 Assert.assertTrue(false);
             } catch (Exception e) {
@@ -355,7 +350,6 @@ public class LiquibaseTestComponent {
      * a ChangeLogParseException.
      */
     @Test
-    @TestDuringDevelopment
     public void testNotExistingProvideCapability() {
         installAndStartBundle("bundle2", "META-INF/MANIFEST.MF", "META-INF/liquibase/test.xml");
         try {
@@ -375,7 +369,7 @@ public class LiquibaseTestComponent {
                 database =
                         DatabaseFactory.getInstance().findCorrectDatabaseImplementation(new JdbcConnection(connection));
                 Liquibase liquibase = new Liquibase(resourceName, resourceAccessor, database);
-                liquibase.update(null);
+                liquibase.update((String) null);
 
                 Assert.assertTrue(false);
             } catch (Exception e) {
@@ -420,7 +414,7 @@ public class LiquibaseTestComponent {
                     DatabaseFactory.getInstance().findCorrectDatabaseImplementation(new JdbcConnection(connection));
             Liquibase liquibase = new Liquibase("/META-INF/testBundles/bundle1/META-INF/liquibase/myApp.xml",
                     resourceAccessor, database);
-            liquibase.update(null);
+            liquibase.update((String) null);
 
             Assert.assertTrue(false);
         } catch (Exception e) {

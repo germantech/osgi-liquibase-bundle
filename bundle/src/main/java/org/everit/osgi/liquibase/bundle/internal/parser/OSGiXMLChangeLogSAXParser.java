@@ -27,6 +27,17 @@ import java.io.InputStream;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
+import liquibase.changelog.ChangeLogParameters;
+import liquibase.changelog.DatabaseChangeLog;
+import liquibase.exception.ChangeLogParseException;
+import liquibase.logging.LogFactory;
+import liquibase.parser.ChangeLogParser;
+import liquibase.parser.core.xml.LiquibaseEntityResolver;
+import liquibase.parser.core.xml.XMLChangeLogSAXParser;
+import liquibase.resource.ResourceAccessor;
+import liquibase.resource.UtfBomStripperInputStream;
+import liquibase.util.file.FilenameUtils;
+
 import org.xml.sax.ErrorHandler;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -34,16 +45,6 @@ import org.xml.sax.SAXNotRecognizedException;
 import org.xml.sax.SAXNotSupportedException;
 import org.xml.sax.SAXParseException;
 import org.xml.sax.XMLReader;
-
-import liquibase.changelog.ChangeLogParameters;
-import liquibase.changelog.DatabaseChangeLog;
-import liquibase.exception.ChangeLogParseException;
-import liquibase.logging.LogFactory;
-import liquibase.parser.core.xml.LiquibaseEntityResolver;
-import liquibase.parser.core.xml.XMLChangeLogSAXParser;
-import liquibase.resource.ResourceAccessor;
-import liquibase.resource.UtfBomStripperInputStream;
-import liquibase.util.file.FilenameUtils;
 
 public class OSGiXMLChangeLogSAXParser extends XMLChangeLogSAXParser {
 
@@ -67,11 +68,7 @@ public class OSGiXMLChangeLogSAXParser extends XMLChangeLogSAXParser {
     }
 
     public static String getSchemaVersion() {
-        return "3.0";
-    }
-
-    public static String getDatabaseChangeLogNameSpace() {
-        return "http://www.liquibase.org/xml/ns/dbchangelog";
+        return "3.1";
     }
 
     @Override
@@ -81,6 +78,7 @@ public class OSGiXMLChangeLogSAXParser extends XMLChangeLogSAXParser {
 
     @Override
     public DatabaseChangeLog parse(String physicalChangeLogLocation, ChangeLogParameters changeLogParameters, ResourceAccessor resourceAccessor) throws ChangeLogParseException {
+
         InputStream inputStream = null;
         try {
             SAXParser parser = saxParserFactory.newSAXParser();
@@ -93,7 +91,7 @@ public class OSGiXMLChangeLogSAXParser extends XMLChangeLogSAXParser {
             }
 
             XMLReader xmlReader = parser.getXMLReader();
-            LiquibaseEntityResolver resolver=new LiquibaseEntityResolver();
+            LiquibaseEntityResolver resolver=new LiquibaseEntityResolver(this);
             resolver.useResoureAccessor(resourceAccessor,FilenameUtils.getFullPath(physicalChangeLogLocation));
             xmlReader.setEntityResolver(resolver);
             xmlReader.setErrorHandler(new ErrorHandler() {
@@ -115,7 +113,7 @@ public class OSGiXMLChangeLogSAXParser extends XMLChangeLogSAXParser {
                     throw exception;
                 }
             });
-            
+        	
             inputStream = resourceAccessor.getResourceAsStream(physicalChangeLogLocation);
             if (inputStream == null) {
                 throw new ChangeLogParseException(physicalChangeLogLocation + " does not exist");

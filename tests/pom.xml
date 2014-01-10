@@ -33,7 +33,7 @@
   </parent>
 
   <artifactId>org.everit.osgi.liquibase.bundle.tests</artifactId>
-  <version>1.0.0-alpha2</version>
+  <version>1.0.0-alpha3</version>
 
   <packaging>bundle</packaging>
   <name>Everit Liquibase OSGi Bundle Tests</name>
@@ -102,8 +102,8 @@
 <!--                                    <osgi.console>6667</osgi.console> -->
                   </systemProperties>
                   <vmOptions>
-<!--                     <vmOption>-Xdebug</vmOption> -->
-<!--                     <vmOption>-Xrunjdwp:server=y\,transport=dt_socket\,address=4000\,suspend=n</vmOption> -->
+                    <vmOption>-Xdebug</vmOption>
+                    <vmOption>-Xrunjdwp:server=y\,transport=dt_socket\,address=4000\,suspend=n</vmOption>
                   </vmOptions>
                 </environment>
               </environments>
@@ -256,7 +256,7 @@
     <dependency>
       <groupId>org.liquibase</groupId>
       <artifactId>liquibase-core</artifactId>
-      <version>3.0.8</version>
+      <version>3.1.0</version>
       <scope>provided</scope>
     </dependency>
 
