@@ -59,7 +59,7 @@
             <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
             <Import-Package>*</Import-Package>
             <Export-Package />
-            <EOSGi-TestNum>1</EOSGi-TestNum>
+            <EOSGi-TestNum>7</EOSGi-TestNum>
           </instructions>
         </configuration>
       </plugin>
@@ -89,7 +89,7 @@
             </goals>
             <configuration>
               <jacoco>
-                <includes>org.everit.osgi.liquibase.component.*</includes>
+                <includes>org.everit.osgi.liquibase.bundle.*</includes>
               </jacoco>
               <environments>
                 <environment>
@@ -102,8 +102,8 @@
 <!--                                    <osgi.console>6667</osgi.console> -->
                   </systemProperties>
                   <vmOptions>
-                    <vmOption>-Xdebug</vmOption>
-                    <vmOption>-Xrunjdwp:server=y\,transport=dt_socket\,address=4000\,suspend=n</vmOption>
+<!--                     <vmOption>-Xdebug</vmOption> -->
+<!--                     <vmOption>-Xrunjdwp:server=y\,transport=dt_socket\,address=4000\,suspend=n</vmOption> -->
                   </vmOptions>
                 </environment>
               </environments>
@@ -252,6 +252,7 @@
       <artifactId>org.everit.osgi.liquibase.bundle</artifactId>
       <version>${project.version}</version>
     </dependency>
+
     <dependency>
       <groupId>org.liquibase</groupId>
       <artifactId>liquibase-core</artifactId>

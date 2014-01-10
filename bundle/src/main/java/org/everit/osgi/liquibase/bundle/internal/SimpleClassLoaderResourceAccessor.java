@@ -21,16 +21,13 @@ package org.everit.osgi.liquibase.bundle.internal;
  * MA 02110-1301  USA
  */
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.List;
-import java.util.Vector;
 
 import liquibase.resource.ResourceAccessor;
 import liquibase.util.StringUtils;
@@ -39,20 +36,20 @@ public class SimpleClassLoaderResourceAccessor implements ResourceAccessor {
     private ClassLoader classLoader;
 
     public SimpleClassLoaderResourceAccessor() {
-        this.classLoader = getClass().getClassLoader();
+        classLoader = getClass().getClassLoader();
     }
 
-    public SimpleClassLoaderResourceAccessor(ClassLoader classLoader) {
+    public SimpleClassLoaderResourceAccessor(final ClassLoader classLoader) {
         this.classLoader = classLoader;
     }
 
     @Override
-    public InputStream getResourceAsStream(String file) throws IOException {
+    public InputStream getResourceAsStream(final String file) throws IOException {
         return classLoader.getResourceAsStream(file);
     }
 
     @Override
-    public Enumeration<URL> getResources(String packageName) throws IOException {
+    public Enumeration<URL> getResources(final String packageName) throws IOException {
         return classLoader.getResources(packageName);
     }
 
@@ -73,7 +70,7 @@ public class SimpleClassLoaderResourceAccessor implements ResourceAccessor {
         } else {
             description = classLoader.getClass().getName();
         }
-        return getClass().getName()+"("+ description +")";
+        return getClass().getName() + "(" + description + ")";
 
     }
 }

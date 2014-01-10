@@ -34,7 +34,7 @@
     <createTable tableName="car_registration">
       <column name="car_registration_id" type="bigint" autoIncrement="true">
         <constraints primaryKey="true" nullable="false" />
-      </column>
+      </column> 
       <column name="registration_place" type="varchar(50)" />
       <column name="car_id" type="bigint">
         <constraints foreignKeyName="registration_car" referencedTableName="car" referencedColumnNames="car_id" />

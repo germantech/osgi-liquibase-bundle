@@ -32,6 +32,7 @@ import java.sql.Statement;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.NoSuchElementException;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -41,7 +42,9 @@ import liquibase.Liquibase;
 import liquibase.database.Database;
 import liquibase.database.DatabaseFactory;
 import liquibase.database.jvm.JdbcConnection;
+import liquibase.exception.ChangeLogParseException;
 import liquibase.exception.DatabaseException;
+import liquibase.resource.ClassLoaderResourceAccessor;
 import liquibase.resource.ResourceAccessor;
 
 import org.apache.felix.scr.annotations.Activate;
@@ -59,6 +62,7 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.wiring.BundleCapability;
+import org.osgi.framework.wiring.BundleWiring;
 
 @Component(name = "LiquibaseTest", immediate = true)
 @Service(value = LiquibaseTestComponent.class)
@@ -66,7 +70,7 @@ import org.osgi.framework.wiring.BundleCapability;
         @Property(name = "eosgi.testId", value = "liquibaseTest") })
 public class LiquibaseTestComponent {
 
-    private static void copyURLContentToStream(URL url, OutputStream out) {
+    private static void copyURLContentToStream(final URL url, final OutputStream out) {
         try (InputStream is = url.openStream()) {
             byte[] buffer = new byte[1024];
             int len = is.read(buffer);
@@ -98,8 +102,8 @@ public class LiquibaseTestComponent {
         try {
             Connection connection = dataSource.getConnection();
             database = DatabaseFactory.getInstance().findCorrectDatabaseImplementation(new JdbcConnection(connection));
-//            database.setDefaultCatalogName("public");
-//            database.setDefaultSchemaName("public");
+            // database.setDefaultCatalogName("public");
+            // database.setDefaultSchemaName("public");
             Liquibase liquibase = new Liquibase(null, null, database);
             liquibase.dropAll();
         } catch (Exception e) {
@@ -115,7 +119,7 @@ public class LiquibaseTestComponent {
         }
     }
 
-    private void installAndStartBundle(String pathPrefix, String... filePaths) {
+    private void installAndStartBundle(final String pathPrefix, final String... filePaths) {
         ByteArrayOutputStream bout = new ByteArrayOutputStream();
         ZipOutputStream zipOutputStream = new ZipOutputStream(bout);
         Bundle bundle = bundleContext.getBundle();
@@ -125,7 +129,7 @@ public class LiquibaseTestComponent {
             try {
                 zipOutputStream.putNextEntry(zipEntry);
                 URL resource = bundle.getResource(resourcePath);
-                copyURLContentToStream(resource, zipOutputStream);
+                LiquibaseTestComponent.copyURLContentToStream(resource, zipOutputStream);
                 zipOutputStream.closeEntry();
             } catch (IOException e) {
                 throw new RuntimeException("Error during reading resource " + resourcePath, e);
@@ -162,6 +166,9 @@ public class LiquibaseTestComponent {
         }
     }
 
+    /**
+     * Testing normal OSGi inclusion in a ChangeLog file.
+     */
     @Test
     @TestDuringDevelopment
     public void testChangeLogWithNormalAndOSGiInclude() {
@@ -204,6 +211,229 @@ public class LiquibaseTestComponent {
             dropAll();
             removeBundles();
         }
+    }
 
+    /**
+     * Testing the {@link}createFilterForLiquibaseCapabilityAttributes function with invalid schema expressions.
+     */
+    @Test
+    @TestDuringDevelopment
+    public void testcreateFilterForLiquibaseCapabilityAttributes() {
+        try {
+            LiquibaseOSGiUtil.createFilterForLiquibaseCapabilityAttributes("myApp;myApp2");
+            Assert.assertTrue(false);
+        } catch (Exception e) {
+            Assert.assertTrue(e instanceof RuntimeException);
+        }
+        try {
+            LiquibaseOSGiUtil.createFilterForLiquibaseCapabilityAttributes("myApp;a=x");
+            Assert.assertTrue(false);
+        } catch (Exception e) {
+            Assert.assertTrue(e instanceof RuntimeException);
+        }
+        try {
+            LiquibaseOSGiUtil.createFilterForLiquibaseCapabilityAttributes("myApp;a:=x;b:=y");
+            Assert.assertTrue(false);
+        } catch (Exception e) {
+            Assert.assertTrue(e instanceof RuntimeException);
+        }
+        try {
+            LiquibaseOSGiUtil.createFilterForLiquibaseCapabilityAttributes("myApp;notfilter:=(name=asd)");
+            Assert.assertTrue(false);
+        } catch (Exception e) {
+            Assert.assertTrue(e instanceof RuntimeException);
+        }
+        try {
+            LiquibaseOSGiUtil.createFilterForLiquibaseCapabilityAttributes("myApp;filter:=(version>2)");
+            Assert.assertTrue(false);
+        } catch (Exception e) {
+            Assert.assertTrue(e instanceof RuntimeException);
+        }
+        LiquibaseOSGiUtil.createFilterForLiquibaseCapabilityAttributes("myApp;filter:=(name=asd)");
+        Assert.assertTrue(true);
+    }
+
+    /**
+     * Testing the case if two equal Provide-Capability entry is present in a manifest file for a capability we want to
+     * include in a ChangeLog file.
+     */
+    @Test
+    @TestDuringDevelopment
+    public void testDoubledCapability() {
+
+        installAndStartBundle("bundle2", "META-INF/MANIFEST.MF", "META-INF/liquibase/car.xml");
+        try {
+            Map<Bundle, List<BundleCapability>> bundles =
+                    LiquibaseOSGiUtil.findBundlesBySchemaExpression("carandperson", bundleContext,
+                            Bundle.ACTIVE);
+            Entry<Bundle, List<BundleCapability>> bundleWithCapability = bundles.entrySet().iterator().next();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        } finally {
+            Bundle bundle2 = bundleContext.getBundle("bundle2");
+            try {
+                bundle2.uninstall();
+            } catch (BundleException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
+
+    /**
+     * Test case, when the capability we want to include in our ChangeLog file is optional, and there is no bundle that
+     * provide that capability. In this case, the normal behavior is to throw a NoSuchElementException.
+     */
+    @Test
+    @TestDuringDevelopment
+    public void testHalfwired() {
+        installAndStartBundle("bundle2", "META-INF/MANIFEST.MF", "META-INF/liquibase/car.xml",
+                "META-INF/liquibase/person.xml");
+        installAndStartBundle("bundle1", "META-INF/MANIFEST.MF", "META-INF/liquibase/include_eosgi_halfwired.xml");
+
+        try {
+            Map<Bundle, List<BundleCapability>> bundles =
+                    LiquibaseOSGiUtil.findBundlesBySchemaExpression("halfwired", bundleContext,
+                            Bundle.ACTIVE);
+            Entry<Bundle, List<BundleCapability>> bundleWithCapability = bundles.entrySet().iterator().next();
+            Assert.assertTrue(false);
+        } catch (Exception e) {
+            Assert.assertTrue(e instanceof NoSuchElementException);
+        } finally {
+            removeBundles();
+        }
+    }
+
+    /**
+     * Testing the case when the resource attribute of the included capability is missing. In this case, the normal
+     * behavior is to throw a ChangeLogParseException.
+     */
+    @Test
+    @TestDuringDevelopment
+    public void testNoResource() {
+        installAndStartBundle("bundle2", "META-INF/MANIFEST.MF", "META-INF/liquibase/car.xml",
+                "META-INF/liquibase/person.xml");
+        installAndStartBundle("bundle1", "META-INF/MANIFEST.MF", "META-INF/liquibase/include_eosgi_noresource.xml");
+        try {
+            Map<Bundle, List<BundleCapability>> bundles =
+                    LiquibaseOSGiUtil.findBundlesBySchemaExpression("noresource_test", bundleContext,
+                            Bundle.ACTIVE);
+            Entry<Bundle, List<BundleCapability>> bundleWithCapability = bundles.entrySet().iterator().next();
+            Bundle testBundle = bundleWithCapability.getKey();
+            List<BundleCapability> capabilities = bundleWithCapability.getValue();
+            BundleCapability capability = capabilities.get(0);
+            String resourceName = (String) capability.getAttributes().get(LiquibaseOSGiUtil.ATTR_SCHEMA_RESOURCE);
+
+            ResourceAccessor resourceAccessor = new OSGiResourceAccessor(testBundle);
+            Database database = null;
+
+            try {
+                Connection connection = dataSource.getConnection();
+                database =
+                        DatabaseFactory.getInstance().findCorrectDatabaseImplementation(new JdbcConnection(connection));
+                Liquibase liquibase = new Liquibase(resourceName, resourceAccessor, database);
+                liquibase.update(null);
+
+                Assert.assertTrue(false);
+            } catch (Exception e) {
+                Assert.assertTrue(e instanceof ChangeLogParseException);
+            } finally {
+                if (database != null) {
+                    try {
+                        database.close();
+                    } catch (DatabaseException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        } finally {
+            removeBundles();
+        }
+    }
+
+    /**
+     * Test the case when there is no such capability provided what we want to include in a ChangeLog file. Should throw
+     * a ChangeLogParseException.
+     */
+    @Test
+    @TestDuringDevelopment
+    public void testNotExistingProvideCapability() {
+        installAndStartBundle("bundle2", "META-INF/MANIFEST.MF", "META-INF/liquibase/test.xml");
+        try {
+            Map<Bundle, List<BundleCapability>> bundles =
+                    LiquibaseOSGiUtil.findBundlesBySchemaExpression("test", bundleContext, Bundle.ACTIVE);
+
+            Entry<Bundle, List<BundleCapability>> bundleWithCapability = bundles.entrySet().iterator().next();
+            Bundle testBundle = bundleWithCapability.getKey();
+            List<BundleCapability> capabilities = bundleWithCapability.getValue();
+            BundleCapability capability = capabilities.get(0);
+            String resourceName = (String) capability.getAttributes().get(LiquibaseOSGiUtil.ATTR_SCHEMA_RESOURCE);
+
+            ResourceAccessor resourceAccessor = new OSGiResourceAccessor(testBundle);
+            Database database = null;
+            try {
+                Connection connection = dataSource.getConnection();
+                database =
+                        DatabaseFactory.getInstance().findCorrectDatabaseImplementation(new JdbcConnection(connection));
+                Liquibase liquibase = new Liquibase(resourceName, resourceAccessor, database);
+                liquibase.update(null);
+
+                Assert.assertTrue(false);
+            } catch (Exception e) {
+                Assert.assertTrue(e instanceof ChangeLogParseException);
+            } finally {
+                if (database != null) {
+                    try {
+                        database.close();
+                    } catch (DatabaseException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        } finally {
+            dropAll();
+            try {
+                Bundle bundle2 = bundleContext.getBundle("bundle2");
+                bundle2.uninstall();
+            } catch (BundleException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
+
+    /**
+     * Test case, where the given changeLogFile to a Liquibase object refers to an OSGi based dependency but the
+     * resourceAccessor has different type from OSGiResourceAccessor. Should throw a ChangeLogParseException.
+     */
+    @Test
+    @TestDuringDevelopment
+    public void testResourceAccessor() {
+
+        Bundle bundle = bundleContext.getBundle();
+        BundleWiring bundleWiring = bundle.adapt(BundleWiring.class);
+        ClassLoader classLoader = bundleWiring.getClassLoader();
+
+        ClassLoaderResourceAccessor resourceAccessor = new ClassLoaderResourceAccessor(classLoader);
+        Database database = null;
+        try {
+            Connection connection = dataSource.getConnection();
+            database =
+                    DatabaseFactory.getInstance().findCorrectDatabaseImplementation(new JdbcConnection(connection));
+            Liquibase liquibase = new Liquibase("/META-INF/testBundles/bundle1/META-INF/liquibase/myApp.xml",
+                    resourceAccessor, database);
+            liquibase.update(null);
+
+            Assert.assertTrue(false);
+        } catch (Exception e) {
+            Assert.assertTrue(e instanceof ChangeLogParseException);
+            Assert.assertTrue(e.getMessage().indexOf("refers to an OSGi based dependency but the resourceAccessor") != -1);
+        } finally {
+            if (database != null) {
+                try {
+                    database.close();
+                } catch (DatabaseException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
     }
 }

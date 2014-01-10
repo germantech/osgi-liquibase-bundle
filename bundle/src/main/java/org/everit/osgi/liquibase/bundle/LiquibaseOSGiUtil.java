@@ -52,49 +52,46 @@ public final class LiquibaseOSGiUtil {
 
     public static final String INCLUDE_FILE_OSGI_PREFIX = "eosgi:";
 
-    public static final BundleWire findMatchingWireBySchemaExpression(final Bundle currentBundle,
-            final String schemaExpression) {
-
-        BundleWiring bundleWiring = currentBundle.adapt(BundleWiring.class);
-        List<BundleWire> wires = bundleWiring.getRequiredWires(LIQUIBASE_CAPABILITY_NS);
-
-        if (wires.size() == 0) {
-            return null;
+    public static Filter createFilterForLiquibaseCapabilityAttributes(final String schemaExpression) {
+        Clause[] clauses = Parser.parseClauses(new String[] { schemaExpression });
+        if (clauses.length != 1) {
+            throw new SchemaExpressionSyntaxException("The number of Clauses in the Schema expression should be 1");
         }
-
-        Filter capabilityFilter = createFilterForLiquibaseCapabilityAttributes(schemaExpression);
-
-        Iterator<BundleWire> iterator = wires.iterator();
-        BundleWire matchingWire = null;
-        // Iterate through the wires to find the one that matches the schema expression
-        while (matchingWire == null && iterator.hasNext()) {
-            BundleWire wire = iterator.next();
-            BundleWiring providerWiring = wire.getProviderWiring();
-            // Only check the wire if it is in use (it is not used if e.g. it is optional and there is no provider)
-            if (providerWiring != null) {
-                BundleCapability capability = wire.getCapability();
-                Map<String, Object> capabilityAttributes = capability.getAttributes();
-                if (capabilityFilter.matches(capabilityAttributes)) {
-                    Object schemaResourceAttr = capabilityAttributes.get(ATTR_SCHEMA_RESOURCE);
-                    if (schemaResourceAttr != null) {
-                        matchingWire = wire;
-                    } else {
-                        // TODO Write WARNING
-                    }
-
-                }
+        Clause clause = clauses[0];
+        String schemaName = clause.getName();
+        Attribute[] attributes = clause.getAttributes();
+        if (attributes.length > 0) {
+            throw new SchemaExpressionSyntaxException("No Attributes in the schema expresson are supported.");
+        }
+        Directive[] directives = clause.getDirectives();
+        if (directives.length > 1) {
+            throw new SchemaExpressionSyntaxException(
+                    "The number of Directives in the Schema expression should not be more than 1");
+        }
+        String filterString = "(" + ATTR_SCHEMA_NAME + "=" + schemaName + ")";
+        if (directives.length == 1) {
+            if (!Constants.FILTER_DIRECTIVE.equals(directives[0].getName())) {
+                throw new SchemaExpressionSyntaxException(
+                        "Only the 'filter' directive is supported in the schema expression");
             }
+            String additionalFilterString = directives[0].getValue();
+            filterString = "(&" + filterString + additionalFilterString + ")";
+
         }
-        return matchingWire;
+        try {
+            return FrameworkUtil.createFilter(filterString);
+        } catch (InvalidSyntaxException e) {
+            throw new SchemaExpressionSyntaxException("The filter contains an invalid filter string");
+        }
     }
 
     public static Map<Bundle, List<BundleCapability>> findBundlesBySchemaExpression(final String schemaExpression,
-            BundleContext bundleContext, int necessaryBundleStates) {
-        Filter filter = createFilterForLiquibaseCapabilityAttributes(schemaExpression);
+            final BundleContext bundleContext, final int necessaryBundleStates) {
+        Filter filter = LiquibaseOSGiUtil.createFilterForLiquibaseCapabilityAttributes(schemaExpression);
         Map<Bundle, List<BundleCapability>> result = new TreeMap<>(new Comparator<Bundle>() {
 
             @Override
-            public int compare(Bundle o1, Bundle o2) {
+            public int compare(final Bundle o1, final Bundle o2) {
                 long bundle1Id = o1.getBundleId();
                 long bundle2Id = o2.getBundleId();
                 if (bundle1Id == bundle2Id) {
@@ -132,37 +129,36 @@ public final class LiquibaseOSGiUtil {
         return result;
     }
 
-    public static Filter createFilterForLiquibaseCapabilityAttributes(final String schemaExpression) {
-        Clause[] clauses = Parser.parseClauses(new String[] { schemaExpression });
-        if (clauses.length != 1) {
-            // TODO throw an exception
-        }
-        Clause clause = clauses[0];
-        String schemaName = clause.getName();
-        Attribute[] attributes = clause.getAttributes();
-        if (attributes.length > 0) {
-            // TODO throw excetpion that no attributes are supported
-        }
-        Directive[] directives = clause.getDirectives();
-        if (directives.length > 1) {
-            // TODO throw exception that onl
-        }
-        String filterString = "(" + ATTR_SCHEMA_NAME + "=" + schemaName + ")";
-        if (directives.length == 1) {
-            if (!Constants.FILTER_DIRECTIVE.equals(directives[0].getName())) {
-                // TODO throw exception as only filter is supported
-            }
-            String additionalFilterString = directives[0].getValue();
-            filterString = "(&" + filterString + additionalFilterString + ")";
+    public static final BundleWire findMatchingWireBySchemaExpression(final Bundle currentBundle,
+            final String schemaExpression) {
 
-        }
-        try {
-            return FrameworkUtil.createFilter(filterString);
-        } catch (InvalidSyntaxException e) {
-            // TODO throw runtime exception
-            e.printStackTrace();
+        BundleWiring bundleWiring = currentBundle.adapt(BundleWiring.class);
+        List<BundleWire> wires = bundleWiring.getRequiredWires(LIQUIBASE_CAPABILITY_NS);
+
+        if (wires.size() == 0) {
             return null;
         }
+
+        Filter capabilityFilter = LiquibaseOSGiUtil.createFilterForLiquibaseCapabilityAttributes(schemaExpression);
+
+        Iterator<BundleWire> iterator = wires.iterator();
+        BundleWire matchingWire = null;
+        // Iterate through the wires to find the one that matches the schema expression
+        while ((matchingWire == null) && iterator.hasNext()) {
+            BundleWire wire = iterator.next();
+            BundleCapability capability = wire.getCapability();
+            Map<String, Object> capabilityAttributes = capability.getAttributes();
+            if (capabilityFilter.matches(capabilityAttributes)) {
+                Object schemaResourceAttr = capabilityAttributes.get(ATTR_SCHEMA_RESOURCE);
+                if (schemaResourceAttr != null) {
+                    matchingWire = wire;
+                } else {
+                    // TODO Write WARNING
+                }
+
+            }
+        }
+        return matchingWire;
     }
 
     private LiquibaseOSGiUtil() {
