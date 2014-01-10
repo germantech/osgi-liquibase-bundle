@@ -43,11 +43,18 @@ MANIFEST file:
 Provide-Capability: liquibase.schema;name=myApp;resource=/path;version=3 
 ```
 
-Please note, that the resource attribute is always required! The parser will
-search for the changelog file based on that attribute. To have the wire, the
-bundle, that contains the changeLog inclusion, must have a
-Require-Capability in the MANIFEST.
+And the bundle that contains the inclusion, must contain a requirement:
+
+'''
+Require-Capability: liquibase.schema;filter:=(name=myApp)
+'''
+
+Please note, that the resource attribute on the provider side is always
+required! The parser will search for the changelog file based on that
+attribute.
+
+## Future plans
 
 In the future, it might be possible that there will be a maven plugin that
-automatically creates the Require-Capability in the MANIFEST if it finds a
-changelog file in the bundle.
+automatically generates the Require-Capability entries into the MANIFEST
+if it finds a changelog file in the bundle.
