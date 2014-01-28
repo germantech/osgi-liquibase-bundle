@@ -43,7 +43,7 @@ MANIFEST file:
 Provide-Capability: liquibase.schema;name=myApp;resource=/path;version=3 
 ```
 
-And, the bundle that contains the inclusion, must contain a requirement:
+Furthermore, the bundle that contains the inclusion must contain a requirement:
 
 ```
 Require-Capability: liquibase.schema;filter:=(name=myApp)
