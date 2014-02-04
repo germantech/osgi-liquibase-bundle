@@ -1,49 +1,49 @@
 osgi-liquibase-bundle
 =====================
 
-Liquibase bundle that contains extensions from Everit to be able to use
-Liquibase in an OSGi environmnent. When this bundle is used, no other jar
-of Liquibase should be dropped into the OSGi container.
+A Liquibase bundle that contains extensions from Everit so that
+Liquibase can be used in an OSGi environmnent. When this bundle is used, 
+no other jar of Liquibase should be dropped into the OSGi container.
 
 ## Inclusion of changeLog from other bundles
 
-One enhancement of this bundle is that in the XML changeLog format it is
+One enhancement of this bundle is that in XML changeLog format it is
 possible to address changeLogs from other bundles.
 
 To be able to use the OSGi include element, the OSGiResourceAccessor class
-has to be instantiated and passed to the Liquibase object. By default
-resources will be searched in the same bundle as the changeLog file is
-placed. However, it is possible to prefix the file path with a "eosgi:"
+has to be instantiated and passed to the Liquibase object. By default,
+resources will be searched in the bundle containing the changeLog file. 
+However, it is possible to prefix the file path with an "eosgi:"
 prefix. In that case, the parser will search for Bundle wires based on
-a special capability and if it finds a good wire, a bundle switch will
-be done during the parsing process. For example, imagine that the include
-tag is defined in the following way:
+a special capability and if it finds an appropriate wire, a bundle switch will
+be carried out during the parsing process. For example, let`s see a case where 
+an include tag is defined in the following way:
 
 ```xml
 <include file="eosgi:myApp" />
 ```
 
-In this case the current bundle, that contains this snippet, has to wire
+In this case, the current bundle containing this snippet has to be wired
 to another bundle based on the following capability:
 
 ```
 liquibase.schema;name=myApp;resource=/pathToChangelogFile
 ```
 
-Additional filter may be defined in the include tag like this:
+Additional filters may be defined in include tags like this:
 
 ```xml
 <include file="eosgi:myApp;filter:=(version>=2)" />
 ```
 
-In that case the provider bundle will contain something like this in the
+In this case, the provider bundle will contain something like this in the
 MANIFEST file:
 
 ```
 Provide-Capability: liquibase.schema;name=myApp;resource=/path;version=3 
 ```
 
-And the bundle that contains the inclusion, must contain a requirement:
+Furthermore, the bundle that contains the inclusion must contain a requirement:
 
 ```
 Require-Capability: liquibase.schema;filter:=(name=myApp)
@@ -55,6 +55,6 @@ attribute.
 
 ## Future plans
 
-In the future, it might be possible that there will be a maven plugin that
-automatically generates the Require-Capability entries into the MANIFEST
+In the future, it is possible that there will be a maven plugin that
+automatically generates Require-Capability entries in MANIFEST
 if it finds a changelog file in the bundle.
