@@ -270,5 +270,10 @@
       <artifactId>org.everit.osgi.bundles.javax.sql</artifactId>
       <version>4.0.0</version>
     </dependency>
+    <dependency>
+      <groupId>org.ow2.spec.osgi</groupId>
+      <artifactId>ow2-jdbc-service-1.0-spec</artifactId>
+      <version>1.0.13</version>
+    </dependency>
   </dependencies>
 </project>
