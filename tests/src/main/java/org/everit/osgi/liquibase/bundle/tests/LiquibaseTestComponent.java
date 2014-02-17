@@ -28,8 +28,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.NoSuchElementException;
+import java.util.jar.Attributes;
+import java.util.jar.JarOutputStream;
+import java.util.jar.Manifest;
 import java.util.zip.ZipEntry;
-import java.util.zip.ZipOutputStream;
 
 import javax.sql.DataSource;
 
@@ -113,9 +115,16 @@ public class LiquibaseTestComponent {
         }
     }
 
-    private void installAndStartBundle(final String pathPrefix, final String... filePaths) {
+    private void installAndStartBundle(final String pathPrefix, final String manifestPropertiesPath,
+            final String... filePaths) {
+        Manifest manifest = resolveManifest("/META-INF/testBundles/" + pathPrefix + "/" + manifestPropertiesPath);
         ByteArrayOutputStream bout = new ByteArrayOutputStream();
-        ZipOutputStream zipOutputStream = new ZipOutputStream(bout);
+        JarOutputStream zipOutputStream;
+        try {
+            zipOutputStream = new JarOutputStream(bout, manifest);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
         Bundle bundle = bundleContext.getBundle();
         for (String filePath : filePaths) {
             ZipEntry zipEntry = new ZipEntry(filePath);
@@ -135,6 +144,9 @@ public class LiquibaseTestComponent {
             byte[] bundleBA = bout.toByteArray();
             Bundle installedBundle = bundleContext.installBundle(pathPrefix, new ByteArrayInputStream(bundleBA));
             installedBundle.start();
+            BundleWiring bundleWiring = installedBundle.adapt(BundleWiring.class);
+            List<BundleCapability> capabilities = bundleWiring.getCapabilities(null);
+            System.out.println(capabilities);
         } catch (IOException e) {
             throw new RuntimeException(e);
         } catch (BundleException e) {
@@ -143,9 +155,9 @@ public class LiquibaseTestComponent {
     }
 
     private void installAndStartBundles() {
-        installAndStartBundle("bundle2", "META-INF/MANIFEST.MF", "META-INF/liquibase/car.xml",
+        installAndStartBundle("bundle2", "META-INF/MANIFEST.properties", "META-INF/liquibase/car.xml",
                 "META-INF/liquibase/person.xml");
-        installAndStartBundle("bundle1", "META-INF/MANIFEST.MF", "META-INF/liquibase/myApp.xml");
+        installAndStartBundle("bundle1", "META-INF/MANIFEST.properties", "META-INF/liquibase/myApp.xml");
     }
 
     private void removeBundles() {
@@ -157,6 +169,34 @@ public class LiquibaseTestComponent {
             bundle2.uninstall();
         } catch (BundleException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    private Manifest resolveManifest(final String manifestPropertiesPath) {
+        Bundle bundle = bundleContext.getBundle();
+        URL manifestProperties = bundle.getResource(manifestPropertiesPath);
+        java.util.Properties properties = new java.util.Properties();
+        InputStream mfPropsStream = null;
+        try {
+            mfPropsStream = manifestProperties.openStream();
+            properties.load(mfPropsStream);
+            Manifest manifest = new Manifest();
+            Attributes mainAttributes = manifest.getMainAttributes();
+            mainAttributes.put(Attributes.Name.MANIFEST_VERSION, "1.0");
+            for (Entry<Object, Object> entries : properties.entrySet()) {
+                mainAttributes.putValue((String) entries.getKey(), (String) entries.getValue());
+            }
+            return manifest;
+        } catch (IOException e) {
+            throw new RuntimeException("Cannot load manifest properties from path: " + manifestPropertiesPath, e);
+        } finally {
+            if (mfPropsStream != null) {
+                try {
+                    mfPropsStream.close();
+                } catch (IOException e) {
+                    throw new RuntimeException("Error closing manifest properties stream", e);
+                }
+            }
         }
     }
 
@@ -253,7 +293,7 @@ public class LiquibaseTestComponent {
     @Test
     public void testDoubledCapability() {
 
-        installAndStartBundle("bundle2", "META-INF/MANIFEST.MF", "META-INF/liquibase/car.xml");
+        installAndStartBundle("bundle2", "META-INF/MANIFEST.properties", "META-INF/liquibase/car.xml");
         try {
             Map<Bundle, List<BundleCapability>> bundles =
                     LiquibaseOSGiUtil.findBundlesBySchemaExpression("carandperson", bundleContext,
@@ -277,9 +317,10 @@ public class LiquibaseTestComponent {
      */
     @Test
     public void testHalfwired() {
-        installAndStartBundle("bundle2", "META-INF/MANIFEST.MF", "META-INF/liquibase/car.xml",
+        installAndStartBundle("bundle2", "META-INF/MANIFEST.properties", "META-INF/liquibase/car.xml",
                 "META-INF/liquibase/person.xml");
-        installAndStartBundle("bundle1", "META-INF/MANIFEST.MF", "META-INF/liquibase/include_eosgi_halfwired.xml");
+        installAndStartBundle("bundle1", "META-INF/MANIFEST.properties",
+                "META-INF/liquibase/include_eosgi_halfwired.xml");
 
         try {
             Map<Bundle, List<BundleCapability>> bundles =
@@ -300,9 +341,10 @@ public class LiquibaseTestComponent {
      */
     @Test
     public void testNoResource() {
-        installAndStartBundle("bundle2", "META-INF/MANIFEST.MF", "META-INF/liquibase/car.xml",
+        installAndStartBundle("bundle2", "META-INF/MANIFEST.properties", "META-INF/liquibase/car.xml",
                 "META-INF/liquibase/person.xml");
-        installAndStartBundle("bundle1", "META-INF/MANIFEST.MF", "META-INF/liquibase/include_eosgi_noresource.xml");
+        installAndStartBundle("bundle1", "META-INF/MANIFEST.properties",
+                "META-INF/liquibase/include_eosgi_noresource.xml");
         try {
             Map<Bundle, List<BundleCapability>> bundles =
                     LiquibaseOSGiUtil.findBundlesBySchemaExpression("noresource_test", bundleContext,
@@ -346,7 +388,7 @@ public class LiquibaseTestComponent {
      */
     @Test
     public void testNotExistingProvideCapability() {
-        installAndStartBundle("bundle2", "META-INF/MANIFEST.MF", "META-INF/liquibase/test.xml");
+        installAndStartBundle("bundle2", "META-INF/MANIFEST.properties", "META-INF/liquibase/test.xml");
         try {
             Map<Bundle, List<BundleCapability>> bundles =
                     LiquibaseOSGiUtil.findBundlesBySchemaExpression("test", bundleContext, Bundle.ACTIVE);
