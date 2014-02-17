@@ -157,66 +157,72 @@
 
 <!--         Jetty with Http Service -->
 
-    <dependency>
-      <groupId>org.apache.felix</groupId>
-      <artifactId>org.apache.felix.eventadmin</artifactId>
-      <version>1.3.2</version>
-    </dependency>
-    <dependency>
-      <groupId>org.eclipse.jetty.osgi</groupId>
-      <artifactId>jetty-osgi-boot</artifactId>
-      <version>9.1.0.v20131115</version>
-      <exclusions>
-        <exclusion>
-          <artifactId>jetty-annotations</artifactId>
-          <groupId>org.eclipse.jetty</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>org.eclipse.osgi</artifactId>
-          <groupId>org.eclipse.osgi</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>org.eclipse.osgi.services</artifactId>
-          <groupId>org.eclipse.osgi</groupId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>org.eclipse.jetty.osgi</groupId>
-      <artifactId>jetty-httpservice</artifactId>
-      <version>9.1.0.v20131115</version>
-      <exclusions>
-        <exclusion>
-          <artifactId>org.eclipse.osgi</artifactId>
-          <groupId>org.eclipse.osgi</groupId>
-        </exclusion>
-      </exclusions>
-    </dependency>
+<!--     <dependency> -->
+<!--       <groupId>org.apache.felix</groupId> -->
+<!--       <artifactId>org.apache.felix.eventadmin</artifactId> -->
+<!--       <version>1.3.2</version> -->
+<!--     </dependency> -->
+<!--     <dependency> -->
+<!--       <groupId>org.eclipse.jetty.osgi</groupId> -->
+<!--       <artifactId>jetty-osgi-boot</artifactId> -->
+<!--       <version>9.1.0.v20131115</version> -->
+<!--       <exclusions> -->
+<!--         <exclusion> -->
+<!--           <artifactId>jetty-annotations</artifactId> -->
+<!--           <groupId>org.eclipse.jetty</groupId> -->
+<!--         </exclusion> -->
+<!--         <exclusion> -->
+<!--           <artifactId>org.eclipse.osgi</artifactId> -->
+<!--           <groupId>org.eclipse.osgi</groupId> -->
+<!--         </exclusion> -->
+<!--         <exclusion> -->
+<!--           <artifactId>org.eclipse.osgi.services</artifactId> -->
+<!--           <groupId>org.eclipse.osgi</groupId> -->
+<!--         </exclusion> -->
+<!--       </exclusions> -->
+<!--     </dependency> -->
+<!--     <dependency> -->
+<!--       <groupId>org.eclipse.jetty.osgi</groupId> -->
+<!--       <artifactId>jetty-httpservice</artifactId> -->
+<!--       <version>9.1.0.v20131115</version> -->
+<!--       <exclusions> -->
+<!--         <exclusion> -->
+<!--           <artifactId>org.eclipse.osgi</artifactId> -->
+<!--           <groupId>org.eclipse.osgi</groupId> -->
+<!--         </exclusion> -->
+<!--       </exclusions> -->
+<!--     </dependency> -->
 
-    <dependency>
-      <groupId>org.ow2.spec.osgi</groupId>
-      <artifactId>ow2-httpservice-1.2-spec</artifactId>
-      <version>1.0.0</version>
-    </dependency>
+<!--     <dependency> -->
+<!--       <groupId>org.ow2.spec.osgi</groupId> -->
+<!--       <artifactId>ow2-httpservice-1.2-spec</artifactId> -->
+<!--       <version>1.0.0</version> -->
+<!--     </dependency> -->
 
 <!--         Felix webconsole with dependencies -->
 
-    <dependency>
-      <groupId>org.apache.felix</groupId>
-      <artifactId>org.apache.felix.webconsole</artifactId>
-      <version>4.2.0</version>
-    </dependency>
-    <dependency>
-      <groupId>commons-fileupload</groupId>
-      <artifactId>commons-fileupload</artifactId>
-      <version>1.3</version>
-    </dependency>
+<!--     <dependency> -->
+<!--       <groupId>org.apache.felix</groupId> -->
+<!--       <artifactId>org.apache.felix.webconsole</artifactId> -->
+<!--       <version>4.2.0</version> -->
+<!--     </dependency> -->
+<!--     <dependency> -->
+<!--       <groupId>commons-fileupload</groupId> -->
+<!--       <artifactId>commons-fileupload</artifactId> -->
+<!--       <version>1.3</version> -->
+<!--     </dependency> -->
 
-    <dependency>
-      <groupId>org.apache.felix</groupId>
-      <artifactId>org.apache.felix.webconsole.plugins.ds</artifactId>
-      <version>1.0.0</version>
-    </dependency>
+<!--     <dependency> -->
+<!--       <groupId>org.apache.felix</groupId> -->
+<!--       <artifactId>org.apache.felix.webconsole.plugins.ds</artifactId> -->
+<!--       <version>1.0.0</version> -->
+<!--     </dependency> -->
+
+<!--     <dependency> -->
+<!--       <groupId>org.everit.osgi.bundles</groupId> -->
+<!--       <artifactId>org.everit.osgi.bundles.org.json</artifactId> -->
+<!--       <version>1.0.0-v20140107</version> -->
+<!--     </dependency> -->
 
         <!-- Transaction manager -->
 
