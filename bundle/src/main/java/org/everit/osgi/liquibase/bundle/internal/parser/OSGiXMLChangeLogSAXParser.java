@@ -26,7 +26,6 @@ import liquibase.changelog.ChangeLogParameters;
 import liquibase.changelog.DatabaseChangeLog;
 import liquibase.exception.ChangeLogParseException;
 import liquibase.logging.LogFactory;
-import liquibase.parser.ChangeLogParser;
 import liquibase.parser.core.xml.LiquibaseEntityResolver;
 import liquibase.parser.core.xml.XMLChangeLogSAXParser;
 import liquibase.resource.ResourceAccessor;

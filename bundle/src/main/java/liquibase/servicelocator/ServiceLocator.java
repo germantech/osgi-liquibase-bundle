@@ -260,12 +260,19 @@ public class ServiceLocator {
     }
 
     public static void reset() {
-        Bundle bundle = FrameworkUtil.getBundle(ServiceLocator.class);
-        if (bundle != null) {
-            BundlePackageScanClassResolver classResolver = new BundlePackageScanClassResolver(bundle);
-            ResourceAccessor resourceAccessor = new OSGiResourceAccessor(bundle);
-            instance = new ServiceLocator(classResolver, resourceAccessor);
-        } else {
+        instance = null;
+        try {
+            Bundle bundle = FrameworkUtil.getBundle(ServiceLocator.class);
+            if (bundle != null) {
+                BundlePackageScanClassResolver classResolver = new BundlePackageScanClassResolver(bundle);
+                ResourceAccessor resourceAccessor = new OSGiResourceAccessor(bundle);
+                instance = new ServiceLocator(classResolver, resourceAccessor);
+            }
+        } catch (NoClassDefFoundError e) {
+            // We are not in OSGi environment
+
+        }
+        if (instance == null) {
             instance = new ServiceLocator(new SimpleClassLoaderResourceAccessor(ServiceLocator.class.getClassLoader()));
         }
     }

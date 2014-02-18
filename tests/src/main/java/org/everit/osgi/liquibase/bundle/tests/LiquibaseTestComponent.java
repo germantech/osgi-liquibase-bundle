@@ -292,7 +292,6 @@ public class LiquibaseTestComponent {
      */
     @Test
     public void testDoubledCapability() {
-
         installAndStartBundle("bundle2", "META-INF/MANIFEST.properties", "META-INF/liquibase/car.xml");
         try {
             Map<Bundle, List<BundleCapability>> bundles =
@@ -316,6 +315,7 @@ public class LiquibaseTestComponent {
      * provide that capability. In this case, the normal behavior is to throw a NoSuchElementException.
      */
     @Test
+    @TestDuringDevelopment
     public void testHalfwired() {
         installAndStartBundle("bundle2", "META-INF/MANIFEST.properties", "META-INF/liquibase/car.xml",
                 "META-INF/liquibase/person.xml");
