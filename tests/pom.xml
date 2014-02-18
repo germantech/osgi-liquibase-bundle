@@ -93,7 +93,7 @@
           
             <environment>
               <id>felixtest</id>
-              <framework>org.everit.osgi.dev.dist:eosgi-dist-felix_4.2.1:v202402171513</framework>
+              <framework>felix</framework>
               <systemProperties>
                 <jetty.port>8090</jetty.port>
                 <jetty.home.bundle>org.eclipse.jetty.osgi.boot</jetty.home.bundle>
