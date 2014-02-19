@@ -83,7 +83,8 @@ public final class LiquibaseOSGiUtil {
     public static Map<Bundle, List<BundleCapability>> findBundlesBySchemaExpression(final String schemaExpression,
             final BundleContext bundleContext, final int necessaryBundleStates) {
         Filter filter = LiquibaseOSGiUtil.createFilterForLiquibaseCapabilityAttributes(schemaExpression);
-        Map<Bundle, List<BundleCapability>> result = new TreeMap<>(new Comparator<Bundle>() {
+        Map<Bundle, List<BundleCapability>> result =
+                new TreeMap<Bundle, List<BundleCapability>>(new Comparator<Bundle>() {
 
             @Override
             public int compare(final Bundle o1, final Bundle o2) {
@@ -110,7 +111,7 @@ public final class LiquibaseOSGiUtil {
                         if (filter.matches(attributes)) {
                             List<BundleCapability> capabilityList = result.get(bundle);
                             if (capabilityList == null) {
-                                capabilityList = new ArrayList<>();
+                                capabilityList = new ArrayList<BundleCapability>();
                                 result.put(bundle, capabilityList);
                             }
                             capabilityList.add(capability);
