@@ -23,11 +23,11 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URL;
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.NoSuchElementException;
 import java.util.jar.Attributes;
 import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
@@ -41,6 +41,7 @@ import liquibase.database.DatabaseFactory;
 import liquibase.database.jvm.JdbcConnection;
 import liquibase.exception.ChangeLogParseException;
 import liquibase.exception.DatabaseException;
+import liquibase.exception.LiquibaseException;
 import liquibase.resource.ClassLoaderResourceAccessor;
 import liquibase.resource.ResourceAccessor;
 
@@ -50,14 +51,15 @@ import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
-import org.everit.osgi.dev.testrunner.TestDuringDevelopment;
 import org.everit.osgi.liquibase.bundle.LiquibaseOSGiUtil;
 import org.everit.osgi.liquibase.bundle.OSGiResourceAccessor;
+import org.everit.osgi.liquibase.bundle.SchemaExpressionSyntaxException;
 import org.junit.Assert;
 import org.junit.Test;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
+import org.osgi.framework.Filter;
 import org.osgi.framework.wiring.BundleCapability;
 import org.osgi.framework.wiring.BundleWiring;
 
@@ -204,7 +206,6 @@ public class LiquibaseTestComponent {
      * Testing normal OSGi inclusion in a ChangeLog file.
      */
     @Test
-    @TestDuringDevelopment
     public void testChangeLogWithNormalAndOSGiInclude() {
         installAndStartBundles();
         try {
@@ -254,85 +255,56 @@ public class LiquibaseTestComponent {
     public void testcreateFilterForLiquibaseCapabilityAttributes() {
         try {
             LiquibaseOSGiUtil.createFilterForLiquibaseCapabilityAttributes("myApp;myApp2");
-            Assert.assertTrue(false);
-        } catch (Exception e) {
-            Assert.assertTrue(e instanceof RuntimeException);
+            Assert.fail("Filter creation sould fail because the number of clauses in the schemaexpression should be 1");
+        } catch (SchemaExpressionSyntaxException e) {
+            Assert.assertTrue("The number of Clauses in the Schema expression should be 1".equals(e.getMessage()));
         }
         try {
             LiquibaseOSGiUtil.createFilterForLiquibaseCapabilityAttributes("myApp;a=x");
-            Assert.assertTrue(false);
-        } catch (Exception e) {
-            Assert.assertTrue(e instanceof RuntimeException);
+            Assert.fail("Filter creation sould fail because attributes are not supported in the schema expresson");
+        } catch (SchemaExpressionSyntaxException e) {
+            Assert.assertTrue("No Attributes in the schema expresson are supported.".equals(e.getMessage()));
         }
         try {
             LiquibaseOSGiUtil.createFilterForLiquibaseCapabilityAttributes("myApp;a:=x;b:=y");
-            Assert.assertTrue(false);
-        } catch (Exception e) {
-            Assert.assertTrue(e instanceof RuntimeException);
+            Assert.fail("Filter creation sould fail because the number of directives in the schemaexpression should not be more than 1");
+        } catch (SchemaExpressionSyntaxException e) {
+            Assert.assertTrue("The number of Directives in the Schema expression should not be more than 1".equals(e
+                    .getMessage()));
         }
         try {
-            LiquibaseOSGiUtil.createFilterForLiquibaseCapabilityAttributes("myApp;notfilter:=(name=asd)");
-            Assert.assertTrue(false);
-        } catch (Exception e) {
-            Assert.assertTrue(e instanceof RuntimeException);
+            LiquibaseOSGiUtil.createFilterForLiquibaseCapabilityAttributes("myApp;notafilter:=(name=asd)");
+            Assert.fail("Filter creation sould fail because only the 'filter' directive is supported in the schemaexpression");
+        } catch (SchemaExpressionSyntaxException e) {
+            Assert.assertTrue("Only the 'filter' directive is supported in the schema expression".equals(e.getMessage()));
         }
         try {
             LiquibaseOSGiUtil.createFilterForLiquibaseCapabilityAttributes("myApp;filter:=(version>2)");
-            Assert.assertTrue(false);
-        } catch (Exception e) {
-            Assert.assertTrue(e instanceof RuntimeException);
+            Assert.fail("Filter creation sould fail because the filter contains an invalid filter string");
+        } catch (SchemaExpressionSyntaxException e) {
+            Assert.assertTrue("The filter contains an invalid filter string".equals(e.getMessage()));
         }
-        LiquibaseOSGiUtil.createFilterForLiquibaseCapabilityAttributes("myApp;filter:=(name=asd)");
-        Assert.assertTrue(true);
-    }
-
-    /**
-     * Testing the case if two equal Provide-Capability entry is present in a manifest file for a capability we want to
-     * include in a ChangeLog file.
-     */
-    @Test
-    public void testDoubledCapability() {
-        installAndStartBundle("bundle2", "META-INF/MANIFEST.properties", "META-INF/liquibase/car.xml");
-        try {
-            Map<Bundle, List<BundleCapability>> bundles =
-                    LiquibaseOSGiUtil.findBundlesBySchemaExpression("carandperson", bundleContext,
-                            Bundle.ACTIVE);
-            Entry<Bundle, List<BundleCapability>> bundleWithCapability = bundles.entrySet().iterator().next();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        } finally {
-            Bundle bundle2 = bundleContext.getBundle("bundle2");
-            try {
-                bundle2.uninstall();
-            } catch (BundleException e) {
-                throw new RuntimeException(e);
-            }
-        }
+        Assert.assertTrue(LiquibaseOSGiUtil.createFilterForLiquibaseCapabilityAttributes("myApp;filter:=(name=asd)") instanceof Filter);
     }
 
     /**
      * Test case, when the capability we want to include in our ChangeLog file is optional, and there is no bundle that
-     * provide that capability. In this case, the normal behavior is to throw a NoSuchElementException.
+     * provide that capability.
      */
     @Test
-    @TestDuringDevelopment
     public void testHalfwired() {
         installAndStartBundle("bundle2", "META-INF/MANIFEST.properties", "META-INF/liquibase/car.xml",
                 "META-INF/liquibase/person.xml");
         installAndStartBundle("bundle1", "META-INF/MANIFEST.properties",
                 "META-INF/liquibase/include_eosgi_halfwired.xml");
 
-        try {
-            Map<Bundle, List<BundleCapability>> bundles =
-                    LiquibaseOSGiUtil.findBundlesBySchemaExpression("halfwired", bundleContext,
-                            Bundle.ACTIVE);
-            Entry<Bundle, List<BundleCapability>> bundleWithCapability = bundles.entrySet().iterator().next();
-            Assert.assertTrue(false);
-        } catch (Exception e) {
-            Assert.assertTrue(e instanceof NoSuchElementException);
-        } finally {
-            removeBundles();
-        }
+        Map<Bundle, List<BundleCapability>> bundles =
+                LiquibaseOSGiUtil.findBundlesBySchemaExpression("halfwired", bundleContext,
+                        Bundle.ACTIVE);
+
+        Assert.assertTrue(bundles.isEmpty());
+
+        removeBundles();
     }
 
     /**
@@ -365,9 +337,12 @@ public class LiquibaseTestComponent {
                 Liquibase liquibase = new Liquibase(resourceName, resourceAccessor, database);
                 liquibase.update((String) null);
 
-                Assert.assertTrue(false);
-            } catch (Exception e) {
-                Assert.assertTrue(e instanceof ChangeLogParseException);
+                Assert.fail("The Liquibase.update method should throw a ChangeLogParseException because "
+                        + "there are no matching bundle wire for inclusion of \"noresource\" ");
+            } catch (ChangeLogParseException e) {
+                Assert.assertTrue(e.getMessage().indexOf("No matching bundle wire for inclusion:") != -1);
+            } catch (SQLException | LiquibaseException e) {
+                Assert.fail();
             } finally {
                 if (database != null) {
                     try {
@@ -408,9 +383,12 @@ public class LiquibaseTestComponent {
                 Liquibase liquibase = new Liquibase(resourceName, resourceAccessor, database);
                 liquibase.update((String) null);
 
-                Assert.assertTrue(false);
-            } catch (Exception e) {
-                Assert.assertTrue(e instanceof ChangeLogParseException);
+                Assert.fail("The Liquibase.update method should throw a ChangeLogParseException because "
+                        + "there are no matching bundle wire for the eosgi inclusion of \"notexisting\" capability");
+            } catch (ChangeLogParseException e) {
+                Assert.assertTrue(e.getMessage().indexOf("No matching bundle wire for inclusion:") != -1);
+            } catch (SQLException | LiquibaseException e) {
+                Assert.fail();
             } finally {
                 if (database != null) {
                     try {
@@ -436,7 +414,6 @@ public class LiquibaseTestComponent {
      * resourceAccessor has different type from OSGiResourceAccessor. Should throw a ChangeLogParseException.
      */
     @Test
-    @TestDuringDevelopment
     public void testResourceAccessor() {
 
         Bundle bundle = bundleContext.getBundle();
@@ -453,10 +430,12 @@ public class LiquibaseTestComponent {
                     resourceAccessor, database);
             liquibase.update((String) null);
 
-            Assert.assertTrue(false);
-        } catch (Exception e) {
-            Assert.assertTrue(e instanceof ChangeLogParseException);
+            Assert.fail("Should throw a ChangeLogParseException because a Liquibase object refers to an OSGi based dependency but the "
+                    + "resourceAccessor has different type from OSGiResourceAccessor");
+        } catch (ChangeLogParseException e) {
             Assert.assertTrue(e.getMessage().indexOf("refers to an OSGi based dependency but the resourceAccessor") != -1);
+        } catch (SQLException | LiquibaseException e) {
+            Assert.fail();
         } finally {
             if (database != null) {
                 try {

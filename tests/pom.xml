@@ -51,7 +51,7 @@
             <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
             <Import-Package>*</Import-Package>
             <Export-Package />
-            <EOSGi-TestNum>7</EOSGi-TestNum>
+            <EOSGi-TestNum>6</EOSGi-TestNum>
           </instructions>
         </configuration>
       </plugin>
@@ -172,7 +172,7 @@
     <dependency>
       <groupId>org.everit.osgi.dev</groupId>
       <artifactId>org.everit.osgi.dev.richconsole</artifactId>
-      <version>1.2.0-SNAPSHOT</version>
+      <version>1.2.0</version>
     </dependency>
 
     <dependency>
