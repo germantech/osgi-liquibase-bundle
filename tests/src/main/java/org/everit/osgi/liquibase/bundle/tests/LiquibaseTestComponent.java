@@ -342,7 +342,7 @@ public class LiquibaseTestComponent {
             } catch (ChangeLogParseException e) {
                 Assert.assertTrue(e.getMessage().indexOf("No matching bundle wire for inclusion:") != -1);
             } catch (SQLException | LiquibaseException e) {
-                Assert.fail();
+                throw new RuntimeException(e);
             } finally {
                 if (database != null) {
                     try {
@@ -388,7 +388,7 @@ public class LiquibaseTestComponent {
             } catch (ChangeLogParseException e) {
                 Assert.assertTrue(e.getMessage().indexOf("No matching bundle wire for inclusion:") != -1);
             } catch (SQLException | LiquibaseException e) {
-                Assert.fail();
+                throw new RuntimeException(e);
             } finally {
                 if (database != null) {
                     try {
@@ -435,7 +435,7 @@ public class LiquibaseTestComponent {
         } catch (ChangeLogParseException e) {
             Assert.assertTrue(e.getMessage().indexOf("refers to an OSGi based dependency but the resourceAccessor") != -1);
         } catch (SQLException | LiquibaseException e) {
-            Assert.fail();
+            throw new RuntimeException(e);
         } finally {
             if (database != null) {
                 try {
