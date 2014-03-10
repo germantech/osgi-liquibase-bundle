@@ -39,12 +39,27 @@ import org.osgi.framework.wiring.BundleWiring;
 
 public final class LiquibaseOSGiUtil {
 
+    /**
+     * The name of the capability that makes it possible to find liquibase changelogs. When an import is used within a
+     * liquibase changelog file with the "eosgi:" prefix, liquibase will browse the wires of the bundle and looks for
+     * this capability to find the exact changelog file of the inclusion.
+     */
     public static final String LIQUIBASE_CAPABILITY_NS = "liquibase.schema";
 
+    /**
+     * The name attribute in the liquibase.schema capability. The name should be specified in the include tag of the
+     * changelog XML.
+     */
     public static final String ATTR_SCHEMA_NAME = "name";
 
+    /**
+     * Capability attribute that points to the place of the changelog file within the bundle.
+     */
     public static final String ATTR_SCHEMA_RESOURCE = "resource";
 
+    /**
+     * The prefix that should be used in the "include" elements to be able to find changelogs in other bundles.
+     */
     public static final String INCLUDE_FILE_OSGI_PREFIX = "eosgi:";
 
     public static Filter createFilterForLiquibaseCapabilityAttributes(final String schemaExpression) {
@@ -86,19 +101,19 @@ public final class LiquibaseOSGiUtil {
         Map<Bundle, List<BundleCapability>> result =
                 new TreeMap<Bundle, List<BundleCapability>>(new Comparator<Bundle>() {
 
-            @Override
-            public int compare(final Bundle o1, final Bundle o2) {
-                long bundle1Id = o1.getBundleId();
-                long bundle2Id = o2.getBundleId();
-                if (bundle1Id == bundle2Id) {
-                    return 0;
-                } else if (bundle1Id < bundle2Id) {
-                    return -1;
-                } else {
-                    return 1;
-                }
-            }
-        });
+                    @Override
+                    public int compare(final Bundle o1, final Bundle o2) {
+                        long bundle1Id = o1.getBundleId();
+                        long bundle2Id = o2.getBundleId();
+                        if (bundle1Id == bundle2Id) {
+                            return 0;
+                        } else if (bundle1Id < bundle2Id) {
+                            return -1;
+                        } else {
+                            return 1;
+                        }
+                    }
+                });
         Bundle[] bundles = bundleContext.getBundles();
         for (Bundle bundle : bundles) {
             int state = bundle.getState();
@@ -151,7 +166,6 @@ public final class LiquibaseOSGiUtil {
                 } else {
                     // TODO Write WARNING
                 }
-
             }
         }
         return matchingWire;

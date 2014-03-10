@@ -588,7 +588,8 @@ class OSGiXMLChangeLogSAXHandler extends DefaultHandler {
             fileName = String.valueOf(
                     bundleWire.getCapability().getAttributes().get(LiquibaseOSGiUtil.ATTR_SCHEMA_RESOURCE));
             Bundle providerBundle = bundleWire.getProviderWiring().getBundle();
-            resourceAccessorToUse = new OSGiResourceAccessor(providerBundle);
+            Map<String, Object> attributes = bundleWire.getCapability().getAttributes();
+            resourceAccessorToUse = new OSGiResourceAccessor(providerBundle, attributes);
 
         } else if (isRelativePath) {
             // workaround for FilenameUtils.normalize() returning null for relative paths like ../conf/liquibase.xml

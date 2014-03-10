@@ -19,7 +19,10 @@ package org.everit.osgi.liquibase.bundle;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.util.Collections;
 import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.wiring.BundleWiring;
@@ -28,6 +31,10 @@ import liquibase.resource.ClassLoaderResourceAccessor;
 import liquibase.resource.CompositeResourceAccessor;
 import liquibase.resource.ResourceAccessor;
 
+/**
+ * The resource accessor that should be used in OSGi environments.
+ *
+ */
 public class OSGiResourceAccessor extends CompositeResourceAccessor {
 
     private static class BundleResourceAccessor implements ResourceAccessor {
@@ -55,15 +62,49 @@ public class OSGiResourceAccessor extends CompositeResourceAccessor {
         }
     }
 
-    private Bundle bundle;
+    private final Bundle bundle;
 
+    private final Map<String, Object> attributes;
+
+    /**
+     * Creating a new resource accessor for the specified bundle without any attributes.
+     * 
+     * @param bundle
+     *            The bundle.
+     */
     public OSGiResourceAccessor(Bundle bundle) {
+        this(bundle, null);
+    }
+
+    /**
+     * Creating a new {@link OSGiResourceAccessor} for the specified bundle with the specified attributes.
+     * 
+     * @param bundle
+     *            The bundle.
+     * @param attributes
+     *            See {@link #getAttributes()}.
+     */
+    public OSGiResourceAccessor(Bundle bundle, Map<String, Object> attributes) {
         super(new BundleResourceAccessor(bundle), new ClassLoaderResourceAccessor(
                 OSGiResourceAccessor.class.getClassLoader()));
         this.bundle = bundle;
+        if (attributes == null) {
+            this.attributes = Collections.emptyMap();
+        } else {
+            this.attributes = Collections.unmodifiableMap(new HashMap<String, Object>(attributes));
+        }
     }
 
     public Bundle getBundle() {
         return bundle;
+    }
+
+    /**
+     * Attributes are normally coming from the liquibase.schema capability definition.
+     * 
+     * @return The attributes of the resource accessor.
+     */
+    public Map<String, Object> getAttributes() {
+        return attributes;
     }
 }
