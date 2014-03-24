@@ -29,7 +29,7 @@
   </parent>
 
   <artifactId>org.everit.osgi.liquibase.bundle.tests</artifactId>
-  <version>3.1.1-SNAPSHOT</version>
+  <version>3.1.1-v20140324</version>
 
   <packaging>bundle</packaging>
   <name>Everit Liquibase OSGi Bundle Tests</name>
@@ -71,7 +71,7 @@
       <plugin>
         <groupId>org.everit.osgi.dev</groupId>
         <artifactId>eosgi-maven-plugin</artifactId>
-        <version>2.0.1</version>
+        <version>2.0.3</version>
         <configuration>
           <jacoco>
             <includes>org.everit.osgi.liquibase.bundle.*</includes>
@@ -135,7 +135,7 @@
     <dependency>
       <groupId>org.everit.osgi.dev</groupId>
       <artifactId>org.everit.osgi.dev.testrunner.junit4</artifactId>
-      <version>3.0.1</version>
+      <version>3.0.3</version>
     </dependency>
 
 
