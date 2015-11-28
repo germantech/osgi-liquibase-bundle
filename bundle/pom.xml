@@ -93,10 +93,12 @@
               *;resolution:=optional
             </Import-Package>
             <Embed-Dependency>
-              groupId=org.liquibase;artifactId=liquibase-core;inline=true
+              groupId=org.liquibase;artifactId=liquibase-core;inline=true,
+              groupId=org.yaml;artifactId=snakeyaml;inline=true
             </Embed-Dependency>
             <Include-Resource>
               {maven-resources},
+              {maven-dependencies},
               liquibase/servicelocator/ServiceLocator.class=target/classes/liquibase/servicelocator/ServiceLocator.class
             </Include-Resource>
             <Liquibase-Package>
