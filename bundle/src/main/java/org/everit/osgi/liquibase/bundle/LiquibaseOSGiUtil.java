@@ -170,6 +170,10 @@ public final class LiquibaseOSGiUtil {
         }
         return matchingWire;
     }
+    
+    public static final Bundle getBundle() {
+    	return FrameworkUtil.getBundle(LiquibaseOSGiUtil.class);
+    }
 
     private LiquibaseOSGiUtil() {
     }
