@@ -23,6 +23,13 @@ public interface IFile {
 	boolean exists();
 	boolean isDirectory();
 	String getCanonicalPath() throws IOException;
+	String getPath();
 	String getName();
 	List<IFile> listFiles();
+	IFile getParentFile();
+	/**
+	 * Returns the absolute path of the file.
+	 * @return absolute path, without leading slash if it's a directory.
+	 */
+	String getAbsolutePath();
 }

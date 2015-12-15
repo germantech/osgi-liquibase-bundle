@@ -16,68 +16,54 @@
  */
 package br.com.germantech.liquibase.impl;
 
-import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 import br.com.germantech.liquibase.IFile;
 
-public class NormalFile implements IFile {
+public class EmptyFile implements IFile {
 	
-	private final File file;
-
-	public NormalFile(File file) {
-		super();
-		this.file = file;
-	}
+	public EmptyFile() {}
 
 	@Override
 	public List<IFile> listFiles() {
-		File[] files = file.listFiles();
-		if(files != null) {
-			List<IFile> iFiles = new ArrayList<IFile>();
-			for (File file : files) {
-				iFiles.add(new NormalFile(file));
-			}
-			return iFiles;
-		}
 		return Collections.emptyList();
 	}
 
 	@Override
 	public boolean exists() {
-		return file.exists();
+		return false;
 	}
 
 	@Override
 	public boolean isDirectory() {
-		return file.isDirectory();
+		return false;
 	}
 
 	@Override
 	public String getCanonicalPath() throws IOException {
-		return file.getCanonicalPath();
+		return "";
 	}
 
 	@Override
 	public String getName() {
-		return file.getName();
+		return "";
 	}
 
 	@Override
 	public IFile getParentFile() {
-		return new NormalFile(file.getParentFile());
+		return null;
 	}
 	
 	@Override
-	public String getPath() {
-		return file.getPath();
+	public String getAbsolutePath() {
+		return "";
 	}
 
-	public String getAbsolutePath() {
-		return file.getAbsolutePath();
+	@Override
+	public String getPath() {
+		return null;
 	}
 
 }

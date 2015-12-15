@@ -16,6 +16,7 @@
  */
 package br.com.germantech.liquibase.impl;
 
+import java.io.IOException;
 import java.net.URL;
 import java.util.Collections;
 import java.util.Enumeration;
@@ -25,6 +26,7 @@ import java.util.Vector;
 import org.osgi.framework.Bundle;
 
 import br.com.germantech.liquibase.IFile;
+import liquibase.logging.LogFactory;
 import liquibase.util.file.FilenameUtils;
 
 public class BundleFile implements IFile {
@@ -34,10 +36,22 @@ public class BundleFile implements IFile {
 	private URL resource;
 	
 	public BundleFile(Bundle bundle, String fileName) {
+		this(bundle, null, fileName);
+	}
+	
+	public BundleFile(Bundle bundle, IFile parentPath, String fileName) {
 		super();
 		this.bundle = bundle;
 		this.filePath = fileName;
-		this.resource = bundle.getResource(fileName);
+		String fullPath = null;
+		// It can go wrong
+		try {
+			fullPath = (parentPath == null ? new EmptyFile() : parentPath).getCanonicalPath()+fileName;
+		} catch (IOException e) {
+			LogFactory.getInstance().getLog().info(String.format("File not found [%s]", fullPath), e);
+		}
+		
+		this.resource = bundle.getResource(fullPath);
 	}
 
 	@Override
@@ -82,4 +96,23 @@ public class BundleFile implements IFile {
 			return Collections.emptyList();
 	}
 
+	@Override
+	public IFile getParentFile() {
+		return new BundleFile(bundle, FilenameUtils.getFullPath(filePath));
+	}
+
+	@Override
+	public String getPath() {
+		return removeTrailingSlash(getCanonicalPath());
+	}
+	
+	@Override
+	public String getAbsolutePath() {
+		return removeTrailingSlash(getCanonicalPath());
+	}
+
+	private String removeTrailingSlash(String str) {
+		return str.replaceAll("/$", "");
+	}
+	
 }

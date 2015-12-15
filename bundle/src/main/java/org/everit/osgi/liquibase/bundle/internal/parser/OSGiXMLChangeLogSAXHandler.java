@@ -25,7 +25,6 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLDecoder;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Enumeration;
 import java.util.HashSet;
@@ -584,21 +583,24 @@ class OSGiXMLChangeLogSAXHandler extends DefaultHandler {
 					LogFactory.getInstance().getLog().info(String.format("Found file resource at [%s]: [%s]", base, url.toString()));
 				}
                 
+                // Relative to changelog
                 if (isRelativeToChangelogFile) {
-                	
-                	// Resolve the "absolute" URL of the folder to include, relative to the actual changelog file
-                    File changeLogFile = null;
+                	// Resolve the relative path of folder to include
+                    IFile changeLogFile = null;
 
-                    if (resourceAccessor instanceof OSGiResourceAccessor) {
+                    boolean osgiContext = resourceAccessor instanceof OSGiResourceAccessor;
+                    
+					if (osgiContext) {
+                    	// Cria o file
 						OSGiResourceAccessor resAccessor = (OSGiResourceAccessor) resourceAccessor;
-						changeLogFile = resAccessor.getBundle().getDataFile(databaseChangeLog.getPhysicalFilePath());
+						changeLogFile = new BundleFile(resAccessor.getBundle(), databaseChangeLog.getPhysicalFilePath());
 					} else {
 	                    Enumeration<URL> resources = resourceAccessor.getResources(databaseChangeLog.getPhysicalFilePath());
 	                    
-	                    // Find the correct file and check if it exists
+	                    // Does the changelog file being processed exist? Can we get its path?
 	                    while (resources.hasMoreElements()) {
 	                        try {
-	                            changeLogFile = new File(resources.nextElement().toURI());
+	                            changeLogFile = new NormalFile(new File(resources.nextElement().toURI()));
 	                        } catch (URISyntaxException e) {
 	                            continue; // ignore error, probably a URL or something like that
 	                        }
@@ -611,16 +613,25 @@ class OSGiXMLChangeLogSAXHandler extends DefaultHandler {
 					}
 
                     if (changeLogFile == null) {
-                        throw new SAXException("Cannot determine physical location of "
-                                + databaseChangeLog.getPhysicalFilePath());
+                        throw new SAXException("Cannot determine physical location of " + databaseChangeLog.getPhysicalFilePath());
                     }
                     
                     // Get the base "folder" where all xmls are included
-                    File resourceBase = new File(changeLogFile.getParentFile(), pathName);
-
+//                    File resourceBase = new File(changeLogFile.getParentFile(), pathName);
+                    IFile resourceBase = null;
+                    
+                    if (osgiContext) {
+                    	// It's OSGi
+                    	OSGiResourceAccessor resAccessor = (OSGiResourceAccessor) resourceAccessor;
+                    	resourceBase = new BundleFile(resAccessor.getBundle(), changeLogFile.getParentFile(), pathName);
+                    	
+                    } else
+                    	resourceBase = new NormalFile(new File(changeLogFile.getParentFile().getPath(), pathName));
+                    
+                    // Check if the base folder exists
                     if (!resourceBase.exists()) {
-                        throw new SAXException("Resource directory for includeAll does not exist ["
-                                + resourceBase.getAbsolutePath() + "]");
+                        throw new SAXException(String.format("Resource directory for includeAll does not exist [%s]", 
+                        		resourceBase.getCanonicalPath()));
                     }
 
                     pathName = resourceBase.getPath();
@@ -636,7 +647,7 @@ class OSGiXMLChangeLogSAXHandler extends DefaultHandler {
                     }
 
                     while (pathName.matches(".*/\\.\\./.*")) {
-                        pathName = pathName.replaceFirst("/[^/]+/\\.\\./", "/");
+                        pathName = pathName.replaceFirst("[^/]+/\\.\\.", "/");
                     }
                 }
 
@@ -681,8 +692,8 @@ class OSGiXMLChangeLogSAXHandler extends DefaultHandler {
                         }
                     }
                     
-//                  IFile file = new File(fileUrl.toURI());
                     IFile file = null;
+                    
 					if(isBundleFile) {
                     	// OSGi resource... treat it differently
                     	OSGiResourceAccessor accessor = (OSGiResourceAccessor) resourceAccessor;
