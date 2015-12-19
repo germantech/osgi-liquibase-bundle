@@ -27,6 +27,7 @@ import org.osgi.framework.Bundle;
 
 import br.com.germantech.liquibase.IFile;
 import liquibase.logging.LogFactory;
+import liquibase.logging.Logger;
 import liquibase.util.file.FilenameUtils;
 
 public class BundleFile implements IFile {
@@ -34,6 +35,8 @@ public class BundleFile implements IFile {
 	private final Bundle bundle;
 	private String filePath;
 	private URL resource;
+	private Logger logger = LogFactory.getInstance().getLog();
+	
 	
 	public BundleFile(Bundle bundle, String fileName) {
 		this(bundle, null, fileName);
@@ -46,16 +49,25 @@ public class BundleFile implements IFile {
 		String fullPath = null;
 		// It can go wrong
 		try {
-			fullPath = (parentPath == null ? new EmptyFile() : parentPath).getCanonicalPath()+fileName;
+			IFile parent = parentPath == null ? new EmptyFile() : parentPath;
+			fullPath = parent.getCanonicalPath()+fileName;
+			
+			logger.debug(String.format("@[%s] BundleFile created with fileName [%s] and parent file [%s]. Resulting path: [%s]", hashCode(), fileName, parent.getCanonicalPath(), fullPath));
+			
+			// Try to translate the path
+			String resolvedFileName = FilenameUtils.normalize(fullPath);
+			this.resource = bundle.getResource(resolvedFileName);
+			
+			logger.debug(String.format("@[%s] BundleFile.resource = [%s]. Path used [%s], resolved: [%s], plugin: [%s]", hashCode(), resource, fullPath, resolvedFileName, bundle.getSymbolicName()));
 		} catch (IOException e) {
-			LogFactory.getInstance().getLog().info(String.format("File not found [%s]", fullPath), e);
+			LogFactory.getInstance().getLog().info(String.format("@[%s] File not found [%s]", hashCode(), fullPath), e);
 		}
 		
-		this.resource = bundle.getResource(fullPath);
 	}
 
 	@Override
 	public boolean exists() {
+		// TODO What if we have a relative path?
 		return resource != null;
 	}
 
@@ -66,7 +78,9 @@ public class BundleFile implements IFile {
 
 	@Override
 	public String getCanonicalPath() {
-		return resource.getPath();
+		// This guy should return the "resolved" path, in case the resource
+		// was created with a relative path
+		return resource == null ? "" : resource.getPath();
 	}
 
 	@Override
@@ -98,7 +112,9 @@ public class BundleFile implements IFile {
 
 	@Override
 	public IFile getParentFile() {
-		return new BundleFile(bundle, FilenameUtils.getFullPath(filePath));
+		String fullPath = FilenameUtils.getFullPath(filePath);
+		logger.debug(String.format("@[%s].getParentFile for [%s] = [%s]", hashCode(), filePath, fullPath));
+		return new BundleFile(bundle, fullPath);
 	}
 
 	@Override

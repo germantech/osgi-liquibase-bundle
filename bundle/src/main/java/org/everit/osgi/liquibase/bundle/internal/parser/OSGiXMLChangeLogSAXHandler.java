@@ -578,22 +578,28 @@ class OSGiXMLChangeLogSAXHandler extends DefaultHandler {
                 // Check if we are in a OSGi context
                 String base = FilenameUtils.getFullPath(pathName);
 				Enumeration<URL> res = resourceAccessor.getResources(base);
-                while (res.hasMoreElements()) {
+                Logger logger = LogFactory.getInstance().getLog();
+                
+				while (res.hasMoreElements()) {
 					URL url = res.nextElement();
-					LogFactory.getInstance().getLog().info(String.format("Found file resource at [%s]: [%s]", base, url.toString()));
+					logger.info(String.format("Found file resource at [%s]: [%s]", base, url.toString()));
 				}
                 
                 // Relative to changelog
                 if (isRelativeToChangelogFile) {
+                	// TODO This still isn't working with relative path "../changelogs"
                 	// Resolve the relative path of folder to include
                     IFile changeLogFile = null;
 
                     boolean osgiContext = resourceAccessor instanceof OSGiResourceAccessor;
                     
+                    logger.debug(String.format("Are we in an OSGi context? [%s]", osgiContext));
+                    
 					if (osgiContext) {
                     	// Cria o file
 						OSGiResourceAccessor resAccessor = (OSGiResourceAccessor) resourceAccessor;
 						changeLogFile = new BundleFile(resAccessor.getBundle(), databaseChangeLog.getPhysicalFilePath());
+						logger.debug(String.format("Changelog file [%s]. Exists: [%s]", databaseChangeLog.getPhysicalFilePath(), changeLogFile.exists()));
 					} else {
 	                    Enumeration<URL> resources = resourceAccessor.getResources(databaseChangeLog.getPhysicalFilePath());
 	                    
@@ -623,15 +629,16 @@ class OSGiXMLChangeLogSAXHandler extends DefaultHandler {
                     if (osgiContext) {
                     	// It's OSGi
                     	OSGiResourceAccessor resAccessor = (OSGiResourceAccessor) resourceAccessor;
+                    	// É um caminho relativo, ele não vai encontrar o "resource"
                     	resourceBase = new BundleFile(resAccessor.getBundle(), changeLogFile.getParentFile(), pathName);
-                    	
                     } else
                     	resourceBase = new NormalFile(new File(changeLogFile.getParentFile().getPath(), pathName));
                     
+                    logger.debug(String.format("Resource base IFile: [%s]. getPath: [%s]", resourceBase.getCanonicalPath(), resourceBase.getPath()));
+                    
                     // Check if the base folder exists
                     if (!resourceBase.exists()) {
-                        throw new SAXException(String.format("Resource directory for includeAll does not exist [%s]", 
-                        		resourceBase.getCanonicalPath()));
+                        throw new SAXException(String.format("Resource directory for includeAll does not exist [%s]", resourceBase.getCanonicalPath()));
                     }
 
                     pathName = resourceBase.getPath();
@@ -649,6 +656,9 @@ class OSGiXMLChangeLogSAXHandler extends DefaultHandler {
                     while (pathName.matches(".*/\\.\\./.*")) {
                         pathName = pathName.replaceFirst("[^/]+/\\.\\.", "/");
                     }
+                    
+                    logger.debug("databaseChangeLog.getFilePath() = "+databaseChangeLog.getFilePath().replaceFirst("/[^/]*$", ""));
+                    logger.debug(String.format("Resolved relative pathName: [%s]", pathName));
                 }
 
                 Enumeration<URL> resourcesEnum = resourceAccessor.getResources(pathName);
