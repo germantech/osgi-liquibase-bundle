@@ -38,7 +38,8 @@
 
   <properties>
     <projectpath>osgi-liquibase-bundle</projectpath>
-    <liquibase.version>3.1.1</liquibase.version>
+    <liquibase.artifact>liquibase-core-gtech</liquibase.artifact>
+    <liquibase.version>3.1.1.1</liquibase.version>
     <maven.compiler.source>1.6</maven.compiler.source>
     <maven.compiler.target>1.6</maven.compiler.target>
   </properties>
@@ -141,7 +142,7 @@
     </dependency>
     <dependency>
       <groupId>org.liquibase</groupId>
-      <artifactId>liquibase-core</artifactId>
+      <artifactId>${liquibase.artifact}</artifactId>
       <version>${liquibase.version}</version>
       <scope>provided</scope>
     </dependency>
