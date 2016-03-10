@@ -22,11 +22,11 @@
 
     <modelVersion>4.0.0</modelVersion>
 
-    <parent>
+    <!-- <parent>
         <groupId>org.everit.config</groupId>
         <artifactId>org.everit.config.oss</artifactId>
         <version>5.0.0</version>
-    </parent>
+    </parent> -->
 
     <groupId>org.everit.osgi</groupId>
     <artifactId>org.everit.osgi.liquibase.bundle.parent</artifactId>
@@ -35,14 +35,43 @@
     <name>Everit OSGi Liquibase Bundle Parent</name>
     <description>Extension to be able to use Liquibase in OSGi environment in the way as it is defined in the Everit persistence model.</description>
 
+	<distributionManagement>
+		<snapshotRepository>
+			<id>pub-repo.gtechs.xyz</id>
+			<url>s3://mvn-repo.gtechs.xyz/snapshot</url>
+		</snapshotRepository>
+		<repository>
+			<id>pub-repo.gtechs.xyz</id>
+			<url>s3://mvn-repo.gtechs.xyz/release</url>
+		</repository>
+	</distributionManagement>
+	
+	<repositories>
+		<repository>
+			<id>pub-repo.gtechs.xyz</id>
+            <url>s3://mvn-repo.gtechs.xyz/release</url>
+		</repository>
+	</repositories>
+
     <properties>
         <maven.site.skip>true</maven.site.skip>
         <maven.site.deploy.skip>true</maven.site.deploy.skip>
-        <maven.deploy.skip>true</maven.deploy.skip>
+        <!-- <maven.deploy.skip>true</maven.deploy.skip> -->
     </properties>
 
     <modules>
         <module>bundle</module>
         <module>tests</module>
     </modules>
+    
+    <build>
+        <extensions>
+          <extension>
+            <groupId>org.kuali.maven.wagons</groupId>
+            <artifactId>maven-s3-wagon</artifactId>
+            <version>1.2.1</version>
+          </extension>
+        </extensions>
+    </build>
+    
 </project>
