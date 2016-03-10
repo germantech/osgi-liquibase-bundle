@@ -37,18 +37,18 @@
 
 	<distributionManagement>
 		<snapshotRepository>
-			<id>pub-repo.gtechs.xyz</id>
+			<id>gtechs.xyz</id>
 			<url>s3://mvn-repo.gtechs.xyz/snapshot</url>
 		</snapshotRepository>
 		<repository>
-			<id>pub-repo.gtechs.xyz</id>
+			<id>gtechs.xyz</id>
 			<url>s3://mvn-repo.gtechs.xyz/release</url>
 		</repository>
 	</distributionManagement>
 	
 	<repositories>
 		<repository>
-			<id>pub-repo.gtechs.xyz</id>
+			<id>gtechs.xyz</id>
             <url>http://mvn-repo.gtechs.xyz/release</url>
 		</repository>
 	</repositories>
