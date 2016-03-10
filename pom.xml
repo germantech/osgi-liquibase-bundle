@@ -49,7 +49,7 @@
 	<repositories>
 		<repository>
 			<id>pub-repo.gtechs.xyz</id>
-            <url>s3://mvn-repo.gtechs.xyz/release</url>
+            <url>http://mvn-repo.gtechs.xyz/release</url>
 		</repository>
 	</repositories>
 
