@@ -49,7 +49,7 @@
 	<repositories>
 		<repository>
 			<id>gtechs.xyz</id>
-            <url>http://mvn-repo.gtechs.xyz/release</url>
+            <url>http://mvn.gtech.site/release</url>
 		</repository>
 	</repositories>
 
